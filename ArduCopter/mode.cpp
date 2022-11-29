@@ -62,6 +62,11 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
 #endif
 
 #if MODE_LOITER_ENABLED == ENABLED
+
+        case Mode::Number::MYSECOND:
+            ret = &mode_mysecond;
+            break;
+
         case Mode::Number::LOITER:
             ret = &mode_loiter;
             break;
