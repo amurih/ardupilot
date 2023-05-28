@@ -193,6 +193,7 @@ public:
     friend class Mode;
     friend class ModeAcro;
     friend class ModeAcro_Heli;
+    friend class ModeMythird;
     friend class ModeAltHold;
     friend class ModeAuto;
     friend class ModeAutoTune;
@@ -927,6 +928,7 @@ private:
     ModeAcro mode_acro;
 #endif
 #endif
+    ModeMythird mode_mythird;
     ModeAltHold mode_althold;
 #if MODE_AUTO_ENABLED == ENABLED
     ModeAuto mode_auto;

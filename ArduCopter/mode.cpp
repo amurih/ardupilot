@@ -41,6 +41,10 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
             ret = &mode_myfirst;
             break;
 
+        case Mode::Number::MYTHIRD:
+            ret = &mode_mythird;
+            break;
+            
         case Mode::Number::STABILIZE:
             ret = &mode_stabilize;
             break;

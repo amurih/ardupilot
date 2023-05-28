@@ -15,7 +15,7 @@ void ModeMyfirst::run()
     float target_roll, target_pitch;
     static float time = 0;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, copter.aparm.angle_max);
-    if (target_pitch > 1000){
+    if (target_pitch > 2000){
     time = 0;
     }
 
@@ -63,8 +63,8 @@ void ModeMyfirst::run()
     //gcs().send_text(MAV_SEVERITY_CRITICAL, "Auto: Missing Takeoff Cmd");
     //gcs().send_text(MAV_SEVERITY_CRITICAL, "vx, vy: %f, %f", target_vx, target_vy);
     
-    if(time<100.0){
-            target_pitch = 20.0*100;
+    if(time<50.0){
+            target_pitch = 10.0*100;
             time = time + 0.0025;
     }else {
         target_pitch = 0.0;
