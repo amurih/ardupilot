@@ -39,7 +39,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-        MYTHIRD =      97,  // My Third Flight
+        MYTHIRD =      97,  // My Third Flight (test by Kato)
         MYSECOND =     98, // My Second Flight
         MYFIRST =      99, // My First Flight
     };
