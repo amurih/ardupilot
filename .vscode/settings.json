@@ -1,4 +1,9 @@
 {
     "cSpell.language": "en-GB",
-    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc"
+    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc",
+    "cmake.sourceDirectory": "/home/touyo/ardupilot/libraries/AP_HAL_ESP32/targets/esp-idf",
+    "files.associations": {
+        "*.py": "python",
+        "random": "cpp"
+    }
 }

@@ -37,6 +37,14 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
             break;
 #endif
 
+        case Mode::Number::MYFIRST:
+            ret = &mode_myfirst;
+            break;
+
+        case Mode::Number::MYTHIRD:
+            ret = &mode_mythird;
+            break;
+            
         case Mode::Number::STABILIZE:
             ret = &mode_stabilize;
             break;
@@ -58,6 +66,11 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
 #endif
 
 #if MODE_LOITER_ENABLED == ENABLED
+
+        case Mode::Number::MYSECOND:
+            ret = &mode_mysecond;
+            break;
+
         case Mode::Number::LOITER:
             ret = &mode_loiter;
             break;
@@ -429,6 +442,7 @@ void Mode::get_pilot_desired_lean_angles(float &roll_out_cd, float &pitch_out_cd
     // Convert to centi-degrees
     roll_out_cd = roll_out_deg * 100.0;
     pitch_out_cd = pitch_out_deg * 100.0;
+    //pitch_out_cd = 100*100.0;
 }
 
 // transform pilot's roll or pitch input into a desired velocity

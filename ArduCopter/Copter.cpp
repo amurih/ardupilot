@@ -114,6 +114,9 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     FAST_TASK_CLASS(AP_InertialSensor, &copter.ins, update),
     // run low level rate controllers that only require IMU data
     FAST_TASK(run_rate_controller),
+    #if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
+    FAST_TASK(run_custom_controller),
+    #endif
     // send outputs to the motors library immediately
     FAST_TASK(motors_output),
      // run EKF state estimator (expensive)
@@ -494,6 +497,7 @@ void Copter::fourhundred_hz_logging()
     if (should_log(MASK_LOG_ATTITUDE_FAST) && !copter.flightmode->logs_attitude()) {
         Log_Write_Attitude();
     }
+    Log_Write_Attitude();
 }
 
 // ten_hz_logging_loop
@@ -502,7 +506,7 @@ void Copter::ten_hz_logging_loop()
 {
     // log attitude data if we're not already logging at the higher rate
     if (should_log(MASK_LOG_ATTITUDE_MED) && !should_log(MASK_LOG_ATTITUDE_FAST) && !copter.flightmode->logs_attitude()) {
-        Log_Write_Attitude();
+        //Log_Write_Attitude();
     }
     // log EKF attitude data
     if (should_log(MASK_LOG_ATTITUDE_MED) || should_log(MASK_LOG_ATTITUDE_FAST)) {

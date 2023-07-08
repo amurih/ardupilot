@@ -160,6 +160,10 @@
 #include <AP_Scripting/AP_Scripting.h>
 #endif
 
+#if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
+#include <AC_CustomControl/AC_CustomControl.h>                  // Custom control library
+#endif
+
 // Local modules
 #ifdef USER_PARAMS_ENABLED
 #include "UserParameters.h"
@@ -193,6 +197,7 @@ public:
     friend class Mode;
     friend class ModeAcro;
     friend class ModeAcro_Heli;
+    friend class ModeMythird;
     friend class ModeAltHold;
     friend class ModeAuto;
     friend class ModeAutoTune;
@@ -205,11 +210,13 @@ public:
     friend class ModeFollow;
     friend class ModeGuided;
     friend class ModeLand;
+    friend class ModeMysecond;
     friend class ModeLoiter;
     friend class ModePosHold;
     friend class ModeRTL;
     friend class ModeSmartRTL;
     friend class ModeSport;
+    friend class ModeMyfirst;
     friend class ModeStabilize;
     friend class ModeStabilize_Heli;
     friend class ModeSystemId;
@@ -458,6 +465,9 @@ private:
     AC_PosControl *pos_control;
     AC_WPNav *wp_nav;
     AC_Loiter *loiter_nav;
+#if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
+    AC_CustomControl custom_control{ahrs_view, attitude_control, motors, scheduler.get_loop_period_s()};
+#endif
 
 #if MODE_CIRCLE_ENABLED == ENABLED
     AC_Circle *circle_nav;
@@ -686,6 +696,10 @@ private:
     void rotate_body_frame_to_NE(float &x, float &y);
     uint16_t get_pilot_speed_dn() const;
     void run_rate_controller() { attitude_control->rate_controller_run(); }
+
+#if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
+    void run_custom_controller() { custom_control.update(); }
+#endif
 
     // avoidance.cpp
     void low_alt_avoidance();
@@ -925,6 +939,7 @@ private:
     ModeAcro mode_acro;
 #endif
 #endif
+    ModeMythird mode_mythird;
     ModeAltHold mode_althold;
 #if MODE_AUTO_ENABLED == ENABLED
     ModeAuto mode_auto;
@@ -952,6 +967,7 @@ private:
 #endif
     ModeLand mode_land;
 #if MODE_LOITER_ENABLED == ENABLED
+    ModeMysecond mode_mysecond;
     ModeLoiter mode_loiter;
 #endif
 #if MODE_POSHOLD_ENABLED == ENABLED
@@ -963,6 +979,7 @@ private:
 #if FRAME_CONFIG == HELI_FRAME
     ModeStabilize_Heli mode_stabilize;
 #else
+    ModeMyfirst mode_myfirst;
     ModeStabilize mode_stabilize;
 #endif
 #if MODE_SPORT_ENABLED == ENABLED
