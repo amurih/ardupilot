@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AC_CustomControl_Backend.h"
-#include <AC_Simulink/arduAttCont.h>
 
 #ifndef CUSTOMCONTROL_ALPHA_ENABLED
     #define CUSTOMCONTROL_ALPHA_ENABLED AP_CUSTOMCONTROL_ENABLED

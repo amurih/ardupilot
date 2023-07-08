@@ -32,8 +32,6 @@ AC_CustomControl_ALPHA::AC_CustomControl_ALPHA(AC_CustomControl& frontend, AP_AH
     AC_CustomControl_Backend(frontend, ahrs, att_control, motors, dt)
 {
     AP_Param::setup_object_defaults(this, var_info);
-
-//simulink_controller.initialize();
 }
 
 // update controller

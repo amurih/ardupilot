@@ -226,6 +226,10 @@ submodules at specific revisions.
                  help="enable generation of scripting documentation")
 
     g = opt.ap_groups['linux']
+    
+    g.add_option('--enable-custom-controller', action='store_true',
+                 default=False,
+                 help="Enables custom controller")
 
     linux_options = ('--prefix', '--destdir', '--bindir', '--libdir')
     for k in linux_options:

@@ -56,23 +56,19 @@ void AC_CustomControl::init(void)
     switch (CustomControlType(_controller_type))
     {
         case CustomControlType::CONT_NONE:
-            gcs().send_text(MAV_SEVERITY_INFO, "AC_CustomControl_NONE");
             break;
         case CustomControlType::CONT_EMPTY: // This is template backend. Don't initialize it.
             // This is template backend. Don't initialize it.
             // _backend = new AC_CustomControl_Empty(*this, _ahrs, _att_control, _motors, _dt);
             // _backend_var_info[get_type()] = AC_CustomControl_Empty::var_info;
-            gcs().send_text(MAV_SEVERITY_INFO, "AC_CustomControl_Empty");
             break;
         case CustomControlType::CONT_PID:
             _backend = new AC_CustomControl_PID(*this, _ahrs, _att_control, _motors, _dt);
             _backend_var_info[get_type()] = AC_CustomControl_PID::var_info;
-            gcs().send_text(MAV_SEVERITY_INFO, "AC_CustomControl_PID");
             break;
         case CustomControlType::CONT_ALPHA:
             _backend = new AC_CustomControl_ALPHA(*this, _ahrs, _att_control, _motors, _dt);
             _backend_var_info[get_type()] = AC_CustomControl_ALPHA::var_info;
-            gcs().send_text(MAV_SEVERITY_INFO, "AC_CustomControl_ALPHA");
             break;
         default:
             return;
@@ -170,18 +166,7 @@ void AC_CustomControl::set_custom_controller(bool enabled)
         _backend->reset();
         gcs().send_text(MAV_SEVERITY_INFO, "Custom controller is ON");
     }
-    // Current custom controller type
-    if (enabled && _controller_type == CustomControlType::CONT_EMPTY) {
-        gcs().send_text(MAV_SEVERITY_INFO, "Current Custom Controller Type is EMPTY");
-    }
-    
-    if (enabled && _controller_type == CustomControlType::CONT_PID) {
-        gcs().send_text(MAV_SEVERITY_INFO, "Current Custom Controller Type is PID");
-    }
 
-    if (enabled && _controller_type == CustomControlType::CONT_ALPHA) {
-        gcs().send_text(MAV_SEVERITY_INFO, "Current Custom Controller Type is ALPHA");
-    }
     _custom_controller_active = enabled;
 
     // log successful switch
