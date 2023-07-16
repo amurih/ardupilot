@@ -33,7 +33,7 @@ AC_CustomControl_ALPHA::AC_CustomControl_ALPHA(AC_CustomControl& frontend, AP_AH
 {
     AP_Param::setup_object_defaults(this, var_info);
 
-//simulink_controller.initialize();
+    simulink_controller.initialize();
 }
 
 // update controller
@@ -56,13 +56,40 @@ Vector3f AC_CustomControl_ALPHA::update(void)
             break;
     }
 
-    // arducopter main attitude controller already runned
-    // we don't need to do anything else
+    // run custom controller after here
+     Quaternion attitude_body, attitude_target;
+    _ahrs->get_quat_body_to_ned(attitude_body);
 
+    attitude_target = _att_control->get_attitude_target_quat();
+    // This vector represents the angular error to rotate the thrust vector using x and y and heading using z
+    Vector3f attitude_error;
+    float _thrust_angle, _thrust_error_angle;
+    _att_control->thrust_heading_rotation_angles(attitude_target, attitude_body, attitude_error, _thrust_angle, _thrust_error_angle);
+
+    // recalculate ang vel feedforward from attitude target model
+    // rotation from the target frame to the body frame
+    Quaternion rotation_target_to_body = attitude_body.inverse() * attitude_target;
+    // target angle velocity vector in the body frame
+    Vector3f ang_vel_body_feedforward = rotation_target_to_body * _att_control->get_attitude_target_ang_vel();
+    Vector3f gyro_latest = _ahrs->get_gyro_latest();
     gcs().send_text(MAV_SEVERITY_INFO, "ALPHA custom controller working");
 
+    // '<Root>/attiude_error'
+    float arg_attiude_error[3]{attitude_error.x, attitude_error.y, attitude_error.z };
+
+    // '<Root>/rate_ff'
+    float arg_rate_ff[3]{ang_vel_body_feedforward.x, ang_vel_body_feedforward.y, ang_vel_body_feedforward.z};
+
+    // '<Root>/rate_meas'
+    float arg_rate_meas[3]{ gyro_latest.x, gyro_latest.y, gyro_latest.z};
+
+    // '<Root>/Out1'
+    float arg_Out1[3];
+
+    simulink_controller.step(arg_attiude_error, arg_rate_ff, arg_rate_meas, arg_Out1);
+
     // return what arducopter main controller outputted
-    return Vector3f(_motors->get_roll(), _motors->get_pitch(), _motors->get_yaw());
+    return Vector3f(arg_Out1[0], arg_Out1[1], arg_Out1[2]);
 }
 
 // reset controller to avoid build up on the ground
