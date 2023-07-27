@@ -34,6 +34,7 @@ AC_CustomControl_ALPHA::AC_CustomControl_ALPHA(AC_CustomControl& frontend, AP_AH
     AP_Param::setup_object_defaults(this, var_info);
 
     simulink_controller.initialize();
+    printf("ALPHA.cpp_initialize");
 }
 
 // update controller
@@ -87,6 +88,7 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     float arg_Out1[3];
 
     simulink_controller.step(arg_attiude_error, arg_rate_ff, arg_rate_meas, arg_Out1);
+    printf("ALPHA.cpp_simulink_controller.step\n");
 
     // return what arducopter main controller outputted
     return Vector3f(arg_Out1[0], arg_Out1[1], arg_Out1[2]);
