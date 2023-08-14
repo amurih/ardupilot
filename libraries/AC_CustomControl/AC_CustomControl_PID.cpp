@@ -244,6 +244,7 @@ AC_CustomControl_PID::AC_CustomControl_PID(AC_CustomControl& frontend, AP_AHRS_V
     _pid_atti_rate_yaw(AC_ATC_MULTI_RATE_YAW_P * 0.90f, AC_ATC_MULTI_RATE_YAW_I * 0.90f, AC_ATC_MULTI_RATE_YAW_D * 0.90f, 0.0f, AC_ATC_MULTI_RATE_YAW_IMAX * 0.90f, AC_ATC_MULTI_RATE_RP_FILT_HZ * 0.90f, AC_ATC_MULTI_RATE_YAW_FILT_HZ * 0.90f, 0.0f, dt)
 {
     AP_Param::setup_object_defaults(this, var_info);
+    printf("PID.cpp AC_CustomControl_PID \n");
 }
 
 Vector3f AC_CustomControl_PID::update()
@@ -292,7 +293,7 @@ Vector3f AC_CustomControl_PID::update()
     motor_out.x = _pid_atti_rate_roll.update_all(target_rate[0], gyro_latest[0], 1);
     motor_out.y = _pid_atti_rate_pitch.update_all(target_rate[1], gyro_latest[1], 1);
     motor_out.z = _pid_atti_rate_yaw.update_all(target_rate[2], gyro_latest[2], 1);
-
+    printf("PID.cpp update \n");
     return motor_out;
 }
 
@@ -308,6 +309,7 @@ void AC_CustomControl_PID::reset(void)
     _pid_atti_rate_roll.reset_filter();
     _pid_atti_rate_pitch.reset_filter();
     _pid_atti_rate_yaw.reset_filter();
+    printf("PID.cpp reset \n");
 }
 
 #endif

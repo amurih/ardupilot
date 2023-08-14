@@ -17,6 +17,8 @@ public:
     Vector3f update(void) override;
     void reset(void) override;
 
+    arduAttCont simulink_controller;
+
     // user settable parameters
     static const struct AP_Param::GroupInfo var_info[];
 

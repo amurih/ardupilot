@@ -1,28 +1,32 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// File: arduAttCont_private.h
-//
-// Code generated for Simulink model 'arduAttCont'.
-//
-// Model version                  : 1.3
-// Simulink Coder version         : 9.6 (R2021b) 14-May-2021
-// C/C++ source code generated on : Sun Sep 11 04:36:15 2022
-//
-// Target selection: ert.tlc
-// Embedded hardware selection: ARM Compatible->ARM Cortex-M
-// Code generation objectives: Unspecified
-// Validation result: Not run
-//
+/*
+ * arduAttCont_private.h
+ *
+ * Student License - for use by students to meet course requirements and
+ * perform academic research at degree granting institutions only.  Not
+ * for government, commercial, or other organizational use.
+ *
+ * Code generation for model "arduAttCont".
+ *
+ * Model version              : 1.4
+ * Simulink Coder version : 9.7 (R2022a) 13-Nov-2021
+ * C++ source code generated on : Sat Jul 15 10:42:20 2023
+ *
+ * Target selection: grt.tlc
+ * Note: GRT includes extra infrastructure and instrumentation for prototyping
+ * Embedded hardware selection: ARM Compatible->ARM Cortex-M
+ * Code generation objectives: Unspecified
+ * Validation result: Not run
+ */
+
 #ifndef RTW_HEADER_arduAttCont_private_h_
 #define RTW_HEADER_arduAttCont_private_h_
 #include "rtwtypes.h"
-#endif                                 // RTW_HEADER_arduAttCont_private_h_
+#endif
+//#include "builtin_typeid_types.h"
+//#include "multiword_types.h"
 
-//
-// File trailer for generated code.
-//
-// [EOF]
-//
+/* Private macros used by the generated code to access rtModel */
+/* #ifndef rtmSetTFinal
+#define rtmSetTFinal(rtm, val)         ((rtm)->Timing.tFinal = (val))
+#endif
+#endif                                 /* RTW_HEADER_arduAttCont_private_h_ */
