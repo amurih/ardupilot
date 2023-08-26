@@ -18,6 +18,7 @@
  * Validation result: Not run
  */
 
+#include <stdio.h>
 #include "arduAttCont.h"
 //#include "rtwtypes.h"
 #include "arduAttCont_private.h"
@@ -47,9 +48,13 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum1'
    */
-  rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arduAttCont_U.attiude_error[0] +
-              arduAttCont_U.rate_ff[0]) - arduAttCont_U.rate_meas[0];
-
+  rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arg_attiude_error[0] + arg_rate_ff[0]) - arg_rate_meas[0];
+  /*rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arduAttCont_U.attiude_error[0] +
+              arduAttCont_U.rate_ff[0]) - arduAttCont_U.rate_meas[0];*/
+  printf("arduAttCont_P.ANG_RLL_P: %f\n",arduAttCont_P.ANG_RLL_P);
+  printf("arduAttCont_U.attiude_error[0]: %f\n",arduAttCont_U.attiude_error[0]);
+  printf("arduAttCont_U.rate_ff[0]: %f\n",arduAttCont_U.rate_ff[0]);
+  printf("arduAttCont_U.rate_meas[0]:%f \n",arduAttCont_U.rate_meas[0]);
   /* Gain: '<S86>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S78>/Filter'
    *  Gain: '<S77>/Derivative Gain'
@@ -65,8 +70,9 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum3'
    */
-  rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arduAttCont_U.attiude_error[1] +
-              arduAttCont_U.rate_ff[1]) - arduAttCont_U.rate_meas[1];
+  rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arg_attiude_error[1] + arg_rate_ff[1]) - arg_rate_meas[1];
+  /*rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arduAttCont_U.attiude_error[1] +
+              arduAttCont_U.rate_ff[1]) - arduAttCont_U.rate_meas[1];*/
 
   /* Gain: '<S38>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S30>/Filter'
@@ -83,8 +89,9 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum5'
    */
-  rtb_Sum6 = (arduAttCont_P.ANG_YAW_P * arduAttCont_U.attiude_error[2] +
-              arduAttCont_U.rate_ff[2]) - arduAttCont_U.rate_meas[2];
+  rtb_Sum6 = (arduAttCont_P.ANG_YAW_P * arg_attiude_error[2] + arg_rate_ff[2]) - arg_rate_meas[2];
+  /*rtb_Sum6 = (arduAttCont_P.ANG_YAW_P * arduAttCont_U.attiude_error[2] +
+              arduAttCont_U.rate_ff[2]) - arduAttCont_U.rate_meas[2];*/
 
   /* Gain: '<S134>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S126>/Filter'
@@ -105,13 +112,17 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Sum: '<S44>/Sum'
    *  Sum: '<S92>/Sum'
    */
+
   arg_Out1[0] = (arduAttCont_P.RAT_RLL_P * rtb_Sum2 +
     arduAttCont_DW.Integrator_DSTATE) + rtb_FilterCoefficient;
   arg_Out1[1] = (arduAttCont_P.RAT_PIT_P * rtb_Sum4 +
     arduAttCont_DW.Integrator_DSTATE_k) + rtb_FilterCoefficient_g;
   arg_Out1[2] = (arduAttCont_P.RAT_YAW_P * rtb_Sum6 +
     arduAttCont_DW.Integrator_DSTATE_a) + rtb_FilterCoefficient_p;
-
+  printf("arduAttCont_P.RAT_RLL_P:%f \n",arduAttCont_P.RAT_RLL_P);
+  printf("rtb_Sum2:%f \n",rtb_Sum2);
+  printf("arduAttCont_DW.Integrator_DSTATE:%f \n",arduAttCont_DW.Integrator_DSTATE);
+  printf("rtb_FilterCoefficient:%f \n",rtb_FilterCoefficient);
   /* Update for DiscreteIntegrator: '<S83>/Integrator' incorporates:
    *  Gain: '<S80>/Integral Gain'
    */
