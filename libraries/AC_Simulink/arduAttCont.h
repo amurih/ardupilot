@@ -7,9 +7,9 @@
  *
  * Code generation for model "arduAttCont".
  *
- * Model version              : 1.4
+ * Model version              : 2.1
  * Simulink Coder version : 9.7 (R2022a) 13-Nov-2021
- * C++ source code generated on : Sat Jul 15 10:42:20 2023
+ * C++ source code generated on : Sat Aug 26 12:10:03 2023
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -27,11 +27,11 @@
 #include "arduAttCont_types.h"
 //#include <cfloat>
 
-/* extern "C" {
+/*extern "C" {
 
 #include "rt_nonfinite.h"
 
-} */
+}
 /* Macros for accessing real-time model data structure */
 #ifndef rtmGetFinalTime
 #define rtmGetFinalTime(rtm)           ((rtm)->Timing.tFinal)
@@ -102,9 +102,6 @@ struct P_arduAttCont_T_ {
                                         */
   real32_T ANG_RLL_P;                  /* Variable: ANG_RLL_P
                                         * Referenced by: '<Root>/Gain'
-                                        */
-  real32_T ANG_YAW_P;                  /* Variable: ANG_YAW_P
-                                        * Referenced by: '<Root>/Gain2'
                                         */
   real32_T RAT_PIT_D;                  /* Variable: RAT_PIT_D
                                         * Referenced by: '<S29>/Derivative Gain'
@@ -178,6 +175,9 @@ struct P_arduAttCont_T_ {
   real32_T Filter_gainval_c;           /* Computed Parameter: Filter_gainval_c
                                         * Referenced by: '<S30>/Filter'
                                         */
+  real32_T Gain2_Gain;                 /* Computed Parameter: Gain2_Gain
+                                        * Referenced by: '<Root>/Gain2'
+                                        */
   real32_T Integrator_gainval_o;     /* Computed Parameter: Integrator_gainval_o
                                       * Referenced by: '<S131>/Integrator'
                                       */
@@ -189,7 +189,7 @@ struct P_arduAttCont_T_ {
 /* Real-time Model Data Structure */
 struct tag_RTM_arduAttCont_T {
   const char_T *errorStatus;
- // RTWLogInfo *rtwLogInfo;
+//  RTWLogInfo *rtwLogInfo;
 
   /*
    * Timing:
@@ -242,7 +242,6 @@ class arduAttCont final
   void initialize();
 
   /* model step function */
-  //void step();
   void step(real32_T arg_attiude_error[3], real32_T arg_rate_ff[3], real32_T
             arg_rate_meas[3], real32_T (&arg_Out1)[3]);
 
