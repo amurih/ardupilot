@@ -7,9 +7,9 @@
  *
  * Code generation for model "arduAttCont".
  *
- * Model version              : 1.4
+ * Model version              : 2.1
  * Simulink Coder version : 9.7 (R2022a) 13-Nov-2021
- * C++ source code generated on : Sat Jul 15 10:42:20 2023
+ * C++ source code generated on : Sat Aug 26 12:10:03 2023
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -18,22 +18,20 @@
  * Validation result: Not run
  */
 
-#include <stdio.h>
 #include "arduAttCont.h"
 //#include "rtwtypes.h"
 #include "arduAttCont_private.h"
 
-/* extern "C" {
+/*extern "C" {
 
 #include "rt_nonfinite.h"
 
-} */
+}
 /* Model step function */
- /*  void arduAttCont::step()
-{ */
-void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
+  void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
   arg_rate_ff[3], real32_T arg_rate_meas[3], real32_T (&arg_Out1)[3])
 {
+
   real32_T rtb_FilterCoefficient;
   real32_T rtb_FilterCoefficient_g;
   real32_T rtb_FilterCoefficient_p;
@@ -49,12 +47,6 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Sum: '<Root>/Sum1'
    */
   rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arg_attiude_error[0] + arg_rate_ff[0]) - arg_rate_meas[0];
-  /*rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arduAttCont_U.attiude_error[0] +
-              arduAttCont_U.rate_ff[0]) - arduAttCont_U.rate_meas[0];*/
-  printf("arduAttCont_P.ANG_RLL_P: %f\n",arduAttCont_P.ANG_RLL_P);
-  printf("arduAttCont_U.attiude_error[0]: %f\n",arduAttCont_U.attiude_error[0]);
-  printf("arduAttCont_U.rate_ff[0]: %f\n",arduAttCont_U.rate_ff[0]);
-  printf("arduAttCont_U.rate_meas[0]:%f \n",arduAttCont_U.rate_meas[0]);
   /* Gain: '<S86>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S78>/Filter'
    *  Gain: '<S77>/Derivative Gain'
@@ -71,8 +63,6 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Sum: '<Root>/Sum3'
    */
   rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arg_attiude_error[1] + arg_rate_ff[1]) - arg_rate_meas[1];
-  /*rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arduAttCont_U.attiude_error[1] +
-              arduAttCont_U.rate_ff[1]) - arduAttCont_U.rate_meas[1];*/
 
   /* Gain: '<S38>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S30>/Filter'
@@ -89,9 +79,7 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum5'
    */
-  rtb_Sum6 = (arduAttCont_P.ANG_YAW_P * arg_attiude_error[2] + arg_rate_ff[2]) - arg_rate_meas[2];
-  /*rtb_Sum6 = (arduAttCont_P.ANG_YAW_P * arduAttCont_U.attiude_error[2] +
-              arduAttCont_U.rate_ff[2]) - arduAttCont_U.rate_meas[2];*/
+  rtb_Sum6 = (arduAttCont_P.Gain2_Gain * arg_attiude_error[2] + arg_rate_ff[2]) - arg_rate_meas[2];
 
   /* Gain: '<S134>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S126>/Filter'
@@ -112,17 +100,13 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    *  Sum: '<S44>/Sum'
    *  Sum: '<S92>/Sum'
    */
-
   arg_Out1[0] = (arduAttCont_P.RAT_RLL_P * rtb_Sum2 +
     arduAttCont_DW.Integrator_DSTATE) + rtb_FilterCoefficient;
   arg_Out1[1] = (arduAttCont_P.RAT_PIT_P * rtb_Sum4 +
     arduAttCont_DW.Integrator_DSTATE_k) + rtb_FilterCoefficient_g;
   arg_Out1[2] = (arduAttCont_P.RAT_YAW_P * rtb_Sum6 +
     arduAttCont_DW.Integrator_DSTATE_a) + rtb_FilterCoefficient_p;
-  printf("arduAttCont_P.RAT_RLL_P:%f \n",arduAttCont_P.RAT_RLL_P);
-  printf("rtb_Sum2:%f \n",rtb_Sum2);
-  printf("arduAttCont_DW.Integrator_DSTATE:%f \n",arduAttCont_DW.Integrator_DSTATE);
-  printf("rtb_FilterCoefficient:%f \n",rtb_FilterCoefficient);
+
   /* Update for DiscreteIntegrator: '<S83>/Integrator' incorporates:
    *  Gain: '<S80>/Integral Gain'
    */
@@ -153,19 +137,17 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
   arduAttCont_DW.Filter_DSTATE_b += arduAttCont_P.Filter_gainval_n *
     rtb_FilterCoefficient_p;
 
-/* Matfile logging */
-/*   rt_UpdateTXYLogVars((&arduAttCont_M)->rtwLogInfo, (&(&arduAttCont_M)
+  /*/* Matfile logging */
+  /*rt_UpdateTXYLogVars((&arduAttCont_M)->rtwLogInfo, (&(&arduAttCont_M)
     ->Timing.taskTime0));
- */
-/* signal main to stop simulation */
-/* Sample time: [0.01s, 0.0s] */
-  /*if ((rtmGetTFinal((&arduAttCont_M))!=-1) &&
+  /* signal main to stop simulation */
+  /*{                                    /* Sample time: [0.01s, 0.0s] */
+    /*if ((rtmGetTFinal((&arduAttCont_M))!=-1) &&
         !((rtmGetTFinal((&arduAttCont_M))-(&arduAttCont_M)->Timing.taskTime0) >
           (&arduAttCont_M)->Timing.taskTime0 * (DBL_EPSILON))) {
       rtmSetErrorStatus((&arduAttCont_M), "Simulation finished");
-    }
-  */
-
+    }*/
+  }
 
   /* Update absolute time for base rate */
   /* The "clockTick0" counts the number of times the code of this task has
@@ -176,14 +158,13 @@ void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
    * The two integers represent the low bits Timing.clockTick0 and the high bits
    * Timing.clockTickH0. When the low bit overflows to 0, the high bits increment.
    */
-/*   if (!(++(&arduAttCont_M)->Timing.clockTick0)) {
+  /*if (!(++(&arduAttCont_M)->Timing.clockTick0)) {
     ++(&arduAttCont_M)->Timing.clockTickH0;
   }
 
   (&arduAttCont_M)->Timing.taskTime0 = (&arduAttCont_M)->Timing.clockTick0 *
     (&arduAttCont_M)->Timing.stepSize0 + (&arduAttCont_M)->Timing.clockTickH0 *
-    (&arduAttCont_M)->Timing.stepSize0 * 4294967296.0;  */
-
+    (&arduAttCont_M)->Timing.stepSize0 * 4294967296.0;
 }
 
 /* Model initialize function */
@@ -192,19 +173,19 @@ void arduAttCont::initialize()
   /* Registration code */
 
   /* initialize non-finites */
-/*   rt_InitInfAndNaN(sizeof(real_T));
+  /*rt_InitInfAndNaN(sizeof(real_T));
   rtmSetTFinal((&arduAttCont_M), 10.0);
-  (&arduAttCont_M)->Timing.stepSize0 = 0.01; */
+  (&arduAttCont_M)->Timing.stepSize0 = 0.01;
 
   /* Setup for data logging */
-/*   {
+  /*{
     static RTWLogInfo rt_DataLoggingInfo;
     rt_DataLoggingInfo.loggingInterval = (nullptr);
     (&arduAttCont_M)->rtwLogInfo = &rt_DataLoggingInfo;
-  } */
+  }
 
   /* Setup for data logging */
-/*   {
+  /*{
     rtliSetLogXSignalInfo((&arduAttCont_M)->rtwLogInfo, (nullptr));
     rtliSetLogXSignalPtrs((&arduAttCont_M)->rtwLogInfo, (nullptr));
     rtliSetLogT((&arduAttCont_M)->rtwLogInfo, "tout");
@@ -217,12 +198,12 @@ void arduAttCont::initialize()
     rtliSetLogY((&arduAttCont_M)->rtwLogInfo, "");
     rtliSetLogYSignalInfo((&arduAttCont_M)->rtwLogInfo, (nullptr));
     rtliSetLogYSignalPtrs((&arduAttCont_M)->rtwLogInfo, (nullptr));
-  } */
+  }
 
   /* Matfile logging */
-/*   rt_StartDataLoggingWithStartTime((&arduAttCont_M)->rtwLogInfo, 0.0,
+  /*rt_StartDataLoggingWithStartTime((&arduAttCont_M)->rtwLogInfo, 0.0,
     rtmGetTFinal((&arduAttCont_M)), (&arduAttCont_M)->Timing.stepSize0,
-    (&rtmGetErrorStatus((&arduAttCont_M)))); */
+    (&rtmGetErrorStatus((&arduAttCont_M))));
 
   /* InitializeConditions for DiscreteIntegrator: '<S83>/Integrator' */
   arduAttCont_DW.Integrator_DSTATE =

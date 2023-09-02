@@ -87,8 +87,14 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     // '<Root>/Out1'
     float arg_Out1[3];
 
-    simulink_controller.step(arg_attiude_error, arg_rate_ff, arg_rate_meas, arg_Out1);
+    
     printf("ALPHA.cpp_simulink_controller.step\n");
+    printf("attitude_error: %f,%f,%f\n",arg_attiude_error[0],arg_attiude_error[1],arg_attiude_error[2]);
+    printf("rate_ff: %f,%f,%f \n", arg_rate_ff[0],arg_rate_ff[1],arg_rate_ff[2]);
+    printf("rate_meas: %f,%f,%f \n", arg_rate_meas[0],arg_rate_meas[1],arg_rate_meas[2]);
+    simulink_controller.step(arg_attiude_error, arg_rate_ff, arg_rate_meas, arg_Out1);
+    printf("Out: %f,%f,%f \n",arg_Out1[0],arg_Out1[1],arg_Out1[2]);
+
 
     // return what arducopter main controller outputted
     return Vector3f(arg_Out1[0], arg_Out1[1], arg_Out1[2]);
