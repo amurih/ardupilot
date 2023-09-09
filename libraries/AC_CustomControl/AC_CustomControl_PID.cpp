@@ -1,4 +1,5 @@
 #include "AC_CustomControl_PID.h"
+#include <stdio.h>
 
 #if CUSTOMCONTROL_PID_ENABLED
 

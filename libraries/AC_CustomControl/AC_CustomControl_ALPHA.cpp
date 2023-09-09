@@ -1,4 +1,5 @@
 #include "AC_CustomControl_ALPHA.h"
+#include <stdio.h>
 
 #if CUSTOMCONTROL_ALPHA_ENABLED
 

@@ -32,6 +32,7 @@
 #include "rt_nonfinite.h"
 
 }
+*/
 /* Macros for accessing real-time model data structure */
 #ifndef rtmGetFinalTime
 #define rtmGetFinalTime(rtm)           ((rtm)->Timing.tFinal)
