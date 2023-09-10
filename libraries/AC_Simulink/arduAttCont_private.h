@@ -26,7 +26,7 @@
 //#include "multiword_types.h"
 
 /* Private macros used by the generated code to access rtModel */
-/*#ifndef rtmSetTFinal
-#define rtmSetTFinal(rtm, val)         ((rtm)->Timing.tFinal = (val))
-#endif
-#endif                                 /* RTW_HEADER_arduAttCont_private_h_ */
+//#ifndef rtmSetTFinal
+//#define rtmSetTFinal(rtm, val)         ((rtm)->Timing.tFinal = (val))
+//#endif
+//#endif                                 /* RTW_HEADER_arduAttCont_private_h_ */

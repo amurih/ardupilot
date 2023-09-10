@@ -1,4 +1,5 @@
 #include "AC_CustomControl_Empty.h"
+#include <stdio.h>
 
 #if CUSTOMCONTROL_EMPTY_ENABLED
 

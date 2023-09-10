@@ -27,6 +27,7 @@
 #include "rt_nonfinite.h"
 
 }
+*/
 /* Model step function */
   void arduAttCont::step(real32_T arg_attiude_error[3], real32_T
   arg_rate_ff[3], real32_T arg_rate_meas[3], real32_T (&arg_Out1)[3])
@@ -137,12 +138,13 @@
   arduAttCont_DW.Filter_DSTATE_b += arduAttCont_P.Filter_gainval_n *
     rtb_FilterCoefficient_p;
 
-  /*/* Matfile logging */
-  /*rt_UpdateTXYLogVars((&arduAttCont_M)->rtwLogInfo, (&(&arduAttCont_M)
+  /* Matfile logging
+  rt_UpdateTXYLogVars((&arduAttCont_M)->rtwLogInfo, (&(&arduAttCont_M)
     ->Timing.taskTime0));
-  /* signal main to stop simulation */
-  /*{                                    /* Sample time: [0.01s, 0.0s] */
-    /*if ((rtmGetTFinal((&arduAttCont_M))!=-1) &&
+  signal main to stop simulation
+  */
+  /*{                                    Sample time: [0.01s, 0.0s]
+    if ((rtmGetTFinal((&arduAttCont_M))!=-1) &&
         !((rtmGetTFinal((&arduAttCont_M))-(&arduAttCont_M)->Timing.taskTime0) >
           (&arduAttCont_M)->Timing.taskTime0 * (DBL_EPSILON))) {
       rtmSetErrorStatus((&arduAttCont_M), "Simulation finished");
@@ -166,7 +168,7 @@
     (&arduAttCont_M)->Timing.stepSize0 + (&arduAttCont_M)->Timing.clockTickH0 *
     (&arduAttCont_M)->Timing.stepSize0 * 4294967296.0;
 }
-
+*/
 /* Model initialize function */
 void arduAttCont::initialize()
 {
@@ -176,14 +178,14 @@ void arduAttCont::initialize()
   /*rt_InitInfAndNaN(sizeof(real_T));
   rtmSetTFinal((&arduAttCont_M), 10.0);
   (&arduAttCont_M)->Timing.stepSize0 = 0.01;
-
+  */
   /* Setup for data logging */
   /*{
     static RTWLogInfo rt_DataLoggingInfo;
     rt_DataLoggingInfo.loggingInterval = (nullptr);
     (&arduAttCont_M)->rtwLogInfo = &rt_DataLoggingInfo;
   }
-
+  */
   /* Setup for data logging */
   /*{
     rtliSetLogXSignalInfo((&arduAttCont_M)->rtwLogInfo, (nullptr));
@@ -199,12 +201,12 @@ void arduAttCont::initialize()
     rtliSetLogYSignalInfo((&arduAttCont_M)->rtwLogInfo, (nullptr));
     rtliSetLogYSignalPtrs((&arduAttCont_M)->rtwLogInfo, (nullptr));
   }
-
+  */
   /* Matfile logging */
   /*rt_StartDataLoggingWithStartTime((&arduAttCont_M)->rtwLogInfo, 0.0,
     rtmGetTFinal((&arduAttCont_M)), (&arduAttCont_M)->Timing.stepSize0,
     (&rtmGetErrorStatus((&arduAttCont_M))));
-
+  */
   /* InitializeConditions for DiscreteIntegrator: '<S83>/Integrator' */
   arduAttCont_DW.Integrator_DSTATE =
     arduAttCont_P.rollratePIDController_Initial_o;
