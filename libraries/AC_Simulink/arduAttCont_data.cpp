@@ -7,9 +7,9 @@
  *
  * Code generation for model "arduAttCont".
  *
- * Model version              : 2.1
+ * Model version              : 2.6
  * Simulink Coder version : 9.7 (R2022a) 13-Nov-2021
- * C++ source code generated on : Sat Aug 26 12:10:03 2023
+ * C++ source code generated on : Sun Oct  1 11:56:19 2023
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -30,6 +30,11 @@ P_arduAttCont_T arduAttCont::arduAttCont_P{
 
   /* Variable: ANG_RLL_P
    * Referenced by: '<Root>/Gain'
+   */
+  4.05F,
+
+  /* Variable: ANG_YAW_P
+   * Referenced by: '<Root>/Gain2'
    */
   4.05F,
 
@@ -143,10 +148,20 @@ P_arduAttCont_T arduAttCont::arduAttCont_P{
    */
   0.01F,
 
-  /* Computed Parameter: Gain2_Gain
-   * Referenced by: '<Root>/Gain2'
+  /* Computed Parameter: Gain4_Gain
+   * Referenced by: '<Root>/Gain4'
    */
-  405.0F,
+  -1.0F,
+
+  /* Computed Parameter: Gain3_Gain
+   * Referenced by: '<Root>/Gain3'
+   */
+  0.0F,
+
+  /* Computed Parameter: Gain5_Gain
+   * Referenced by: '<Root>/Gain5'
+   */
+  1.0F,
 
   /* Computed Parameter: Integrator_gainval_o
    * Referenced by: '<S131>/Integrator'
