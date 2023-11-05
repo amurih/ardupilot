@@ -57,17 +57,42 @@ Vector3f AC_CustomControl_ALPHA::update(void)
             // we are off the ground
             break;
     }
-
+    
     // run custom controller after here
-     Quaternion attitude_body, attitude_target;
+    Quaternion attitude_body, attitude_target;
+    //Vector3f _euler_angle_target,_euler_angle_body;
     _ahrs->get_quat_body_to_ned(attitude_body);
+    /*attitude_target = attitude_body;
+    attitude_target.to_euler(_euler_angle_body.x, _euler_angle_body.y, _euler_angle_body.z);
+    _euler_angle_body.z = - _euler_angle_body.z;
+    attitude_target.from_euler(_euler_angle_body.x, _euler_angle_body.y, _euler_angle_body.z);
+    attitude_body = attitude_target;
+    */
 
     attitude_target = _att_control->get_attitude_target_quat();
+    //printf("attitude_target:(%f, %f, %f, %f)\n", attitude_target[0],attitude_target[1],attitude_target[2],attitude_target[3]);
+    // reversed yaw
+    //attitude_target = attitude_target * Quaternion(0.0f, 0.0f, 0.0f, -1.0f);
+    //attitude_target.to_euler(_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z);
+    //printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
+    //printf("euler_angle_target.y:%f\n", _euler_angle_target.y);
+    //printf("euler_angle_target.z:%f\n", _euler_angle_target.z);
+    //printf("reversed attitude target\n");
+    //_euler_angle_target.z = - _euler_angle_target.z;
+    //printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
+    //printf("euler_angle_target.y:%f\n", _euler_angle_target.y);
+    //printf("euler_angle_target.z:%f\n", _euler_angle_target.z);
+    //attitude_target.from_euler(_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z);
+    //printf("attitude_target:(%f, %f, %f, %f)\n", attitude_target[0],attitude_target[1],attitude_target[2],attitude_target[3]);
     // This vector represents the angular error to rotate the thrust vector using x and y and heading using z
     Vector3f attitude_error;
     float _thrust_angle, _thrust_error_angle;
     _att_control->thrust_heading_rotation_angles(attitude_target, attitude_body, attitude_error, _thrust_angle, _thrust_error_angle);
 
+    //attitude_error[0] = attitude_target[0] - attitude_body[0];
+    //attitude_error[1] = attitude_target[1] - attitude_body[1];
+    //attitude_error[2] = attitude_target[2] - attitude_body[2];
+    //attitude_error[3] = attitude_target[3] - attitude_body[3];
     // recalculate ang vel feedforward from attitude target model
     // rotation from the target frame to the body frame
     Quaternion rotation_target_to_body = attitude_body.inverse() * attitude_target;

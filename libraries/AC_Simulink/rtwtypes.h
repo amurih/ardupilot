@@ -7,9 +7,9 @@
  *
  * Code generation for model "arduAttCont".
  *
- * Model version              : 2.6
+ * Model version              : 2.10
  * Simulink Coder version : 9.7 (R2022a) 13-Nov-2021
- * C++ source code generated on : Sun Oct  1 11:56:19 2023
+ * C++ source code generated on : Sun Oct 29 12:57:23 2023
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
