@@ -195,6 +195,7 @@ public:
     friend class AutoTune;
 
     friend class Mode;
+//    friend class TouyoFirst;
     friend class ModeAcro;
     friend class ModeAcro_Heli;
     friend class ModeMythird;
@@ -939,6 +940,7 @@ private:
     ModeAcro mode_acro;
 #endif
 #endif
+//    TouyoFirst  mode_touyofirst;
     ModeMythird mode_mythird;
     ModeAltHold mode_althold;
 #if MODE_AUTO_ENABLED == ENABLED

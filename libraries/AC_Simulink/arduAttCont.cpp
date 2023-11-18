@@ -7,9 +7,9 @@
  *
  * Code generation for model "arduAttCont".
  *
- * Model version              : 2.1
+ * Model version              : 2.6
  * Simulink Coder version : 9.7 (R2022a) 13-Nov-2021
- * C++ source code generated on : Sat Aug 26 12:10:03 2023
+ * C++ source code generated on : Sun Oct  1 11:56:19 2023
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -47,7 +47,9 @@
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum1'
    */
-  rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arg_attiude_error[0] + arg_rate_ff[0]) - arg_rate_meas[0];
+  rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arg_attiude_error[0] +
+              arg_rate_ff[0]) - arg_rate_meas[0];
+
   /* Gain: '<S86>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S78>/Filter'
    *  Gain: '<S77>/Derivative Gain'
@@ -63,7 +65,8 @@
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum3'
    */
-  rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arg_attiude_error[1] + arg_rate_ff[1]) - arg_rate_meas[1];
+  rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arg_attiude_error[1] +
+              arg_rate_ff[1]) - arg_rate_meas[1];
 
   /* Gain: '<S38>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S30>/Filter'
@@ -75,13 +78,17 @@
 
   /* Sum: '<Root>/Sum6' incorporates:
    *  Gain: '<Root>/Gain2'
+   *  Gain: '<Root>/Gain3'
+   *  Gain: '<Root>/Gain4'
+   *  Gain: '<Root>/Gain5'
    *  Inport: '<Root>/attiude_error'
    *  Inport: '<Root>/rate_ff'
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum5'
    */
-  rtb_Sum6 = (arduAttCont_P.Gain2_Gain * arg_attiude_error[2] + arg_rate_ff[2]) - arg_rate_meas[2];
-
+  rtb_Sum6 = (arduAttCont_P.Gain3_Gain * arg_attiude_error[2] *
+              arduAttCont_P.ANG_YAW_P + arduAttCont_P.Gain4_Gain *
+              arg_rate_ff[2]) - arduAttCont_P.Gain5_Gain * arg_rate_meas[2];
   /* Gain: '<S134>/Filter Coefficient' incorporates:
    *  DiscreteIntegrator: '<S126>/Filter'
    *  Gain: '<S125>/Derivative Gain'
@@ -138,12 +145,12 @@
   arduAttCont_DW.Filter_DSTATE_b += arduAttCont_P.Filter_gainval_n *
     rtb_FilterCoefficient_p;
 
-  /* Matfile logging
-  rt_UpdateTXYLogVars((&arduAttCont_M)->rtwLogInfo, (&(&arduAttCont_M)
+  /* Matfile logging */
+  /*rt_UpdateTXYLogVars((&arduAttCont_M)->rtwLogInfo, (&(&arduAttCont_M)
     ->Timing.taskTime0));
-  signal main to stop simulation
   */
-  /*{                                    Sample time: [0.01s, 0.0s]
+  /* signal main to stop simulation */
+  /*{                                    sample time: [0.01s, 0.0s]
     if ((rtmGetTFinal((&arduAttCont_M))!=-1) &&
         !((rtmGetTFinal((&arduAttCont_M))-(&arduAttCont_M)->Timing.taskTime0) >
           (&arduAttCont_M)->Timing.taskTime0 * (DBL_EPSILON))) {
@@ -167,8 +174,8 @@
   (&arduAttCont_M)->Timing.taskTime0 = (&arduAttCont_M)->Timing.clockTick0 *
     (&arduAttCont_M)->Timing.stepSize0 + (&arduAttCont_M)->Timing.clockTickH0 *
     (&arduAttCont_M)->Timing.stepSize0 * 4294967296.0;
-}
-*/
+}*/
+
 /* Model initialize function */
 void arduAttCont::initialize()
 {

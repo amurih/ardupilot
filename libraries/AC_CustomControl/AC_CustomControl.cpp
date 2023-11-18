@@ -10,6 +10,7 @@
 #include "AC_CustomControl_PID.h"
 #include <GCS_MAVLink/GCS.h>
 #include "AC_CustomControl_ALPHA.h"
+#include "AC_CustomControl_BETA.h"
 
 // table of user settable parameters
 const AP_Param::GroupInfo AC_CustomControl::var_info[] = {
@@ -36,6 +37,9 @@ const AP_Param::GroupInfo AC_CustomControl::var_info[] = {
 
     // parameters for ALPHA controller
     AP_SUBGROUPVARPTR(_backend, "3_", 8, AC_CustomControl, _backend_var_info[2]),
+
+    // parameters for BETA controller
+    AP_SUBGROUPVARPTR(_backend, "4_", 9, AC_CustomControl, _backend_var_info[3]),
 
     AP_GROUPEND
 };
@@ -74,6 +78,11 @@ void AC_CustomControl::init(void)
             _backend_var_info[get_type()] = AC_CustomControl_ALPHA::var_info;
             gcs().send_text(MAV_SEVERITY_INFO, "AC_CustomControl_ALPHA");
             break;
+        case CustomControlType::CONT_BETA:
+            _backend = new AC_CustomControl_BETA(*this, _ahrs, _att_control, _motors, _dt);
+            _backend_var_info[get_type()] = AC_CustomControl_BETA::var_info;
+            gcs().send_text(MAV_SEVERITY_INFO, "AC_CustomControl_BETA");
+            break;        
         default:
             return;
     }
@@ -181,6 +190,9 @@ void AC_CustomControl::set_custom_controller(bool enabled)
 
     if (enabled && _controller_type == CustomControlType::CONT_ALPHA) {
         gcs().send_text(MAV_SEVERITY_INFO, "Current Custom Controller Type is ALPHA");
+    }
+    if (enabled && _controller_type == CustomControlType::CONT_BETA) {
+        gcs().send_text(MAV_SEVERITY_INFO, "Current Custom Controller Type is BETA");
     }
     _custom_controller_active = enabled;
 
