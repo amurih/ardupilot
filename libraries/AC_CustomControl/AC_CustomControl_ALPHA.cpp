@@ -6,7 +6,7 @@
 
 #include <GCS_MAVLink/GCS.h>
 
-// table of user settable parameters
+// table of user settable parameters x
 const AP_Param::GroupInfo AC_CustomControl_ALPHA::var_info[] = {
     // @Param: PARAM1
     // @DisplayName: ALPHA param1
