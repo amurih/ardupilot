@@ -10,7 +10,8 @@ public:
     AP_RangeFinder_Params(void);
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_RangeFinder_Params);
+    AP_RangeFinder_Params(const AP_RangeFinder_Params &other) = delete;
+    AP_RangeFinder_Params &operator=(const AP_RangeFinder_Params&) = delete;
 
     AP_Vector3f pos_offset; // position offset in body frame
     AP_Float scaling;

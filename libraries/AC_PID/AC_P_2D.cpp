@@ -8,16 +8,18 @@ const AP_Param::GroupInfo AC_P_2D::var_info[] = {
     // @Param: P
     // @DisplayName: Proportional Gain
     // @Description: P Gain which produces an output value that is proportional to the current error value
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("P",    0, AC_P_2D, _kp, default_kp),
+    AP_GROUPINFO("P",    0, AC_P_2D, _kp, 0),
     AP_GROUPEND
 };
 
 // Constructor
-AC_P_2D::AC_P_2D(float initial_p) :
-    default_kp(initial_p)
+AC_P_2D::AC_P_2D(float initial_p, float dt) :
+    _dt(dt)
 {
     // load parameter values from eeprom
     AP_Param::setup_object_defaults(this, var_info);
+
+    _kp = initial_p;
 }
 
 // update_all - set target and measured inputs to P controller and calculate outputs
@@ -34,7 +36,7 @@ Vector2f AC_P_2D::update_all(postype_t &target_x, postype_t &target_y, const Vec
     }
 
     // MIN(_Dmax, _D2max / _kp) limits the max accel to the point where max jerk is exceeded
-    return sqrt_controller(_error, _kp, _D1_max, 0.0);
+    return sqrt_controller(_error, _kp, _D1_max, _dt);
 }
 
 // set_limits - sets the maximum error to limit output and first and second derivative of output

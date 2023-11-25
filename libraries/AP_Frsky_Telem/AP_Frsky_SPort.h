@@ -2,8 +2,6 @@
 
 #include "AP_Frsky_Backend.h"
 
-#if AP_FRSKY_SPORT_TELEM_ENABLED
-
 class AP_Frsky_SPort : public AP_Frsky_Backend
 {
 
@@ -14,7 +12,8 @@ public:
     }
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_Frsky_SPort);
+    AP_Frsky_SPort(const AP_Frsky_SPort &other) = delete;
+    AP_Frsky_SPort &operator=(const AP_Frsky_SPort&) = delete;
 
     void send() override;
     // send an sport packet by responding to the specified polled sensor
@@ -66,5 +65,3 @@ private:
 namespace AP {
     AP_Frsky_SPort *frsky_sport();
 };
-
-#endif  // AP_FRSKY_SPORT_TELEM_ENABLED

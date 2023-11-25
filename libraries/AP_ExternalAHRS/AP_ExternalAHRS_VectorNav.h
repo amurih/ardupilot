@@ -13,16 +13,16 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*
-  support for serial connected AHRS systems
+  suppport for serial connected AHRS systems
  */
 
 #pragma once
 
-#include "AP_ExternalAHRS_config.h"
-
-#if AP_EXTERNAL_AHRS_VECTORNAV_ENABLED
-
 #include "AP_ExternalAHRS_backend.h"
+
+#if HAL_EXTERNAL_AHRS_ENABLED
+
+#include <GCS_MAVLink/GCS_MAVLink.h>
 
 class AP_ExternalAHRS_VectorNav : public AP_ExternalAHRS_backend {
 
@@ -37,20 +37,17 @@ public:
     bool initialised(void) const override;
     bool pre_arm_check(char *failure_msg, uint8_t failure_msg_len) const override;
     void get_filter_status(nav_filter_status &status) const override;
-    void send_status_report(class GCS_MAVLINK &link) const override;
+    void send_status_report(mavlink_channel_t chan) const override;
 
     // check for new data
     void update() override {
         check_uart();
     }
 
-    // Get model/type name
-    const char* get_name() const override;
-
 private:
     AP_HAL::UARTDriver *uart;
     int8_t port_num;
-    bool setup_complete;
+    bool port_opened;
     uint32_t baudrate;
 
     void update_thread();
@@ -58,8 +55,7 @@ private:
 
     void process_packet1(const uint8_t *b);
     void process_packet2(const uint8_t *b);
-    void process_packet_VN_100(const uint8_t *b);
-    void wait_register_responce(const uint8_t register_num);
+    void send_config(void) const;
 
     uint8_t *pktbuf;
     uint16_t pktoffset;
@@ -70,28 +66,7 @@ private:
 
     uint32_t last_pkt1_ms;
     uint32_t last_pkt2_ms;
-
-    enum class TYPE {
-        VN_300,
-        VN_100,
-    } type;
-
-    char model_name[25];
-
-    // NMEA parsing for setup
-    bool decode(char c);
-    bool decode_latest_term();
-    struct NMEA_parser {
-        char term[25];            // buffer for the current term within the current sentence
-        uint8_t term_offset;      // offset within the _term buffer where the next character should be placed
-        uint8_t term_number;      // term index within the current sentence
-        uint8_t checksum;         // checksum accumulator
-        bool term_is_checksum;    // current term is the checksum
-        bool sentence_valid;      // is current sentence valid so far
-        bool sentence_done;       // true if this sentence has already been decoded
-        uint8_t register_number;  // VectorNAV register number were reading
-    } nmea;
-
 };
 
-#endif  // AP_EXTERNAL_AHRS_VECTORNAV_ENABLED
+#endif  // HAL_EXTERNAL_AHRS_ENABLED
+

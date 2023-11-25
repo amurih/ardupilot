@@ -37,7 +37,8 @@ public:
     AP_Button(void);
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_Button);
+    AP_Button(const AP_Button &other) = delete;
+    AP_Button &operator=(const AP_Button&) = delete;
 
     static const struct AP_Param::GroupInfo var_info[];
 

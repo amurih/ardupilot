@@ -52,9 +52,6 @@ public:
     // set size of ringbuffer, caller responsible for locking
     bool set_size(uint32_t size);
 
-    // set size of ringbuffer, reducing down if size can't be achieved
-    bool set_size_best(uint32_t size);
-    
     // advance the read pointer (discarding bytes)
     bool advance(uint32_t n);
 
@@ -132,9 +129,6 @@ public:
 
     // return size of ringbuffer
     uint32_t get_size(void) const {
-        if (buffer == nullptr) {
-            return 0;
-        }
         uint32_t size = buffer->get_size() / sizeof(T);
         return size>0?size-1:0;
     }
@@ -297,9 +291,6 @@ public:
     // return size of ringbuffer
     uint32_t get_size(void) {
         WITH_SEMAPHORE(sem);
-        if (buffer == nullptr) {
-            return 0;
-        }
         uint32_t size = buffer->get_size() / sizeof(T);
         return size>0?size-1:0;
     }

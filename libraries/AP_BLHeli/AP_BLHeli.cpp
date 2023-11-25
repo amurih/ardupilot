@@ -30,7 +30,7 @@
 #endif
 
 #include <AP_Math/crc.h>
-#include <AP_Vehicle/AP_Vehicle_Type.h>
+#include <AP_Vehicle/AP_Vehicle.h>
 #if APM_BUILD_TYPE(APM_BUILD_Rover)
 #include <AR_Motors/AP_MotorsUGV.h>
 #else
@@ -39,9 +39,9 @@
 #include <GCS_MAVLink/GCS_MAVLink.h>
 #include <GCS_MAVLink/GCS.h>
 #include <AP_SerialManager/AP_SerialManager.h>
+#include <AP_Logger/AP_Logger.h>
 #include <AP_BoardConfig/AP_BoardConfig.h>
 #include <AP_ESC_Telem/AP_ESC_Telem.h>
-#include <SRV_Channel/SRV_Channel.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -51,7 +51,7 @@ extern const AP_HAL::HAL& hal;
 // the MSP protocol on hal.console
 #define BLHELI_UART_LOCK_KEY 0x20180402
 
-// if no packets are received for this time and motor control is active BLH will disconnect (stoping motors)
+// if no packets are received for this time and motor control is active BLH will disconect (stoping motors)
 #define MOTOR_ACTIVE_TIMEOUT 1000
 
 const AP_Param::GroupInfo AP_BLHeli::var_info[] = {
@@ -395,7 +395,7 @@ void AP_BLHeli::msp_process_command(void)
         break;
 
     case MSP_UID:
-        // MCU identifier
+        // MCU identifer
         debug("MSP_UID");
         msp_send_reply(msp.cmdMSP, (const uint8_t *)UDID_START, 12);
         break;
@@ -446,18 +446,6 @@ void AP_BLHeli::msp_process_command(void)
         putU16(&buf[0], 1406); // 3D deadband low
         putU16(&buf[2], 1514); // 3D deadband high
         putU16(&buf[4], 1460); // 3D neutral
-        msp_send_reply(msp.cmdMSP, buf, sizeof(buf));
-        break;
-    }
-
-    case MSP_BATTERY_STATE: {
-        debug("MSP_BATTERY_STATE");
-        uint8_t buf[8];
-        buf[0] = 4; // cell count
-        putU16(&buf[1], 1500); // mAh
-        buf[3] = 16; // V
-        putU16(&buf[4], 1500); // mAh
-        putU16(&buf[6], 1); // A
         msp_send_reply(msp.cmdMSP, buf, sizeof(buf));
         break;
     }
@@ -1315,9 +1303,8 @@ void AP_BLHeli::update(void)
 /*
   Initialize BLHeli, called by SRV_Channels::init()
   Used to install protocol handler
-  The motor mask of enabled motors can be passed in
  */
-void AP_BLHeli::init(uint32_t mask, AP_HAL::RCOutput::output_mode otype)
+void AP_BLHeli::init(void)
 {
     initialised = true;
 
@@ -1346,7 +1333,7 @@ void AP_BLHeli::init(uint32_t mask, AP_HAL::RCOutput::output_mode otype)
     }
 #endif
 
-    mask |= uint32_t(channel_mask.get());
+    uint32_t mask = uint32_t(channel_mask.get());
 
     /*
       allow mode override - this makes it possible to use DShot for
@@ -1355,9 +1342,7 @@ void AP_BLHeli::init(uint32_t mask, AP_HAL::RCOutput::output_mode otype)
     // +1 converts from AP_Motors::pwm_type to AP_HAL::RCOutput::output_mode and saves doing a param conversion
     // this is the only use of the param, but this is still a bit of a hack
     const int16_t type = output_type.get() + 1;
-    if (otype == AP_HAL::RCOutput::MODE_PWM_NONE) {
-        otype = ((type > AP_HAL::RCOutput::MODE_PWM_NONE) && (type < AP_HAL::RCOutput::MODE_NEOPIXEL)) ? AP_HAL::RCOutput::output_mode(type) : AP_HAL::RCOutput::MODE_PWM_NONE;
-    }
+    AP_HAL::RCOutput::output_mode otype = ((type > AP_HAL::RCOutput::MODE_PWM_NONE) && (type < AP_HAL::RCOutput::MODE_NEOPIXEL)) ? AP_HAL::RCOutput::output_mode(type) : AP_HAL::RCOutput::MODE_PWM_NONE;
     switch (otype) {
     case AP_HAL::RCOutput::MODE_PWM_ONESHOT:
     case AP_HAL::RCOutput::MODE_PWM_ONESHOT125:
@@ -1421,7 +1406,7 @@ void AP_BLHeli::init(uint32_t mask, AP_HAL::RCOutput::output_mode otype)
     motor_mask = mask;
     debug("ESC: %u motors mask=0x%08lx", num_motors, mask);
 
-    // check if we have a combination of reversible and normal
+    // check if we have a combination of reversable and normal
     mixed_type = (mask != (mask & channel_reversible_mask.get())) && (channel_reversible_mask.get() != 0);
 
     if (num_motors != 0 && telem_rate > 0) {
@@ -1460,14 +1445,7 @@ void AP_BLHeli::read_telemetry_packet(void)
     const uint8_t motor_idx = motor_map[last_telem_esc];
     // we have received valid data, mark the ESC as now active
     hal.rcout->set_active_escs_mask(1<<motor_idx);
-
-    uint8_t normalized_motor_idx = motor_idx - chan_offset;
-#if HAL_WITH_IO_MCU
-    if (AP_BoardConfig::io_dshot()) {
-        normalized_motor_idx = motor_idx;
-    }
-#endif
-    update_rpm(normalized_motor_idx, new_rpm);
+    update_rpm(motor_idx - chan_offset, new_rpm);
 
     TelemetryData t {
         .temperature_cdeg = int16_t(buf[0] * 100),
@@ -1476,7 +1454,7 @@ void AP_BLHeli::read_telemetry_packet(void)
         .consumption_mah = float(uint16_t((buf[5]<<8) | buf[6])),
     };
 
-    update_telem_data(normalized_motor_idx, t,
+    update_telem_data(motor_idx - chan_offset, t,
         AP_ESC_Telem_Backend::TelemetryType::CURRENT
             | AP_ESC_Telem_Backend::TelemetryType::VOLTAGE
             | AP_ESC_Telem_Backend::TelemetryType::CONSUMPTION
@@ -1516,10 +1494,8 @@ void AP_BLHeli::log_bidir_telemetry(void)
                 trpm = trpm * 200 / motor_poles;
             }
 
-            if (trpm > 0) {
-                last_log_ms[last_telem_esc] = now;
-                DEV_PRINTF("ESC[%u] RPM=%u e=%.1f t=%u\n", last_telem_esc, trpm, hal.rcout->get_erpm_error_rate(motor_idx), (unsigned)AP_HAL::millis());
-            }
+            last_log_ms[last_telem_esc] = now;
+            DEV_PRINTF("ESC[%u] RPM=%u e=%.1f t=%u\n", last_telem_esc, trpm, hal.rcout->get_erpm_error_rate(motor_idx), (unsigned)AP_HAL::millis());
         }
     }
 

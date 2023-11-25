@@ -21,6 +21,10 @@
 #include "SIM_Aircraft.h"
 #include "SIM_Motor.h"
 
+#ifndef USE_PICOJSON
+#define USE_PICOJSON (CONFIG_HAL_BOARD == HAL_BOARD_SITL)
+#endif
+
 #if USE_PICOJSON
 #include "picojson.h"
 #endif

@@ -5,6 +5,8 @@
 
 #include "AP_Baro_Backend.h"
 
+// AP_BARO_EXTERNALAHRS_ENABLED is defined in AP_Baro.h
+
 #if AP_BARO_EXTERNALAHRS_ENABLED
 
 class AP_Baro_ExternalAHRS : public AP_Baro_Backend

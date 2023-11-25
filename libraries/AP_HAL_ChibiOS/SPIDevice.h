@@ -25,10 +25,6 @@
 #include "Scheduler.h"
 #include "Device.h"
 
-#ifndef HAL_SPI_SCK_SAVE_RESTORE
-#define HAL_SPI_SCK_SAVE_RESTORE TRUE
-#endif
-
 namespace ChibiOS {
 
 class SPIBus : public DeviceBus {
@@ -39,6 +35,7 @@ public:
     SPIConfig spicfg;
     void dma_allocate(Shared_DMA *ctx);
     void dma_deallocate(Shared_DMA *ctx);
+    bool spi_started;
     uint8_t slowdown;
 
     // we need an additional lock in the dma_allocate and
@@ -46,21 +43,6 @@ public:
     // have two DMA channels that we are handling with the shared_dma
     // code
     mutex_t dma_lock;
-
-    // store the last spi mode for stop_peripheral()
-    uint32_t spi_mode;
-
-    // start and stop the hardware peripheral
-    void start_peripheral(void);
-    void stop_peripheral(void);
-
-private:
-    bool spi_started;
-
-    // mode line for SCK pin
-#if HAL_SPI_SCK_SAVE_RESTORE
-    iomode_t sck_mode;
-#endif
 };
 
 struct SPIDesc {

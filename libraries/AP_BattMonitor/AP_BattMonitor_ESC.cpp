@@ -14,11 +14,12 @@
  */
 
 
-#include "AP_BattMonitor_config.h"
-
-#if AP_BATTERY_ESC_ENABLED
-
+#include <AP_HAL/AP_HAL.h>
 #include "AP_BattMonitor_ESC.h"
+
+#if HAL_WITH_ESC_TELEM
+
+extern const AP_HAL::HAL &hal;
 
 void AP_BattMonitor_ESC::init(void)
 {
@@ -105,4 +106,4 @@ bool AP_BattMonitor_ESC::reset_remaining(float percentage)
     return false;
 }
 
-#endif // AP_BATTERY_ESC_ENABLED
+#endif // HAL_WITH_ESC_TELEM

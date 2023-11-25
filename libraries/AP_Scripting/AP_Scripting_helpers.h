@@ -1,9 +1,6 @@
 #pragma once
 
 #include <AP_Param/AP_Param.h>
-#include "lua/src/lua.hpp"
-
-int lua_new_Parameter(lua_State *L);
 
 /// Fast param access via pointer helper
 class Parameter

@@ -35,7 +35,6 @@
     LOG_RMGI_MSG, \
     LOG_ROFH_MSG, \
     LOG_REPH_MSG, \
-    LOG_RSLL_MSG, \
     LOG_REVH_MSG, \
     LOG_RWOH_MSG, \
     LOG_RBOH_MSG
@@ -307,7 +306,6 @@ struct log_ROFH {
     Vector2f rawGyroRates;
     uint32_t msecFlowMeas;
     Vector3f posOffset;
-    float heightOverride;
     uint8_t rawFlowQuality;
     uint8_t _end;
 };
@@ -322,16 +320,6 @@ struct log_REPH {
     uint32_t timeStamp_ms;
     uint32_t resetTime_ms;
     uint16_t delay_ms;
-    uint8_t _end;
-};
-
-// @LoggerMessage: RSLL
-// @Description: Replay Set Lat Lng event
-struct log_RSLL {
-    int32_t lat; // WGS-84 latitude in 1E-7 degrees
-    int32_t lng; // WGS-84 longitude in 1E7 degrees
-    float posAccSD; // horizontal position 1 STD uncertainty (m)
-    uint32_t timestamp_ms;
     uint8_t _end;
 };
 
@@ -425,11 +413,9 @@ struct log_RBOH {
     { LOG_RVOH_MSG, RLOG_SIZE(RVOH),                                   \
       "RVOH", "fffIBB", "OX,OY,OZ,Del,H,Ena", "------", "------" }, \
     { LOG_ROFH_MSG, RLOG_SIZE(ROFH),                                   \
-      "ROFH", "ffffIffffB", "FX,FY,GX,GY,Tms,PX,PY,PZ,HgtOvr,Qual", "----------", "----------" }, \
+      "ROFH", "ffffIfffB", "FX,FY,GX,GY,Tms,PX,PY,PZ,Qual", "---------", "---------" }, \
     { LOG_REPH_MSG, RLOG_SIZE(REPH),                                   \
       "REPH", "fffffffffIIH", "PX,PY,PZ,Q1,Q2,Q3,Q4,PEr,AEr,TS,RT,D", "------------", "------------" }, \
-    { LOG_RSLL_MSG, RLOG_SIZE(RSLL),                         \
-      "RSLL", "IIfI", "Lat,Lng,PosAccSD,TS", "DU--", "GG--" }, \
     { LOG_REVH_MSG, RLOG_SIZE(REVH),                                   \
       "REVH", "ffffIH", "VX,VY,VZ,Er,TS,D", "------", "------" }, \
     { LOG_RWOH_MSG, RLOG_SIZE(RWOH),                                   \

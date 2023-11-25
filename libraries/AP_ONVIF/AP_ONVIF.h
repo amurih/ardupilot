@@ -34,7 +34,8 @@ public:
     AP_ONVIF();
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_ONVIF);
+    AP_ONVIF(const AP_ONVIF &other) = delete;
+    AP_ONVIF &operator=(const AP_ONVIF&) = delete;
     
     // Start ONVIF client with username, password and service host url
     bool start(const char *user, const char *pass, const char *httphostname);

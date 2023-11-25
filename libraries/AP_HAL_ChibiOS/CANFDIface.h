@@ -154,11 +154,17 @@ class ChibiOS::CANIface : public AP_HAL::CANIface
     bool _detected_bus_off;
     Timings timings, fdtimings;
     uint32_t _bitrate, _fdbitrate;
-
-    /*
-      additional statistics
-     */
-    struct bus_stats : public AP_HAL::CANIface::bus_stats_t {
+    struct {
+        uint32_t tx_requests;
+        uint32_t tx_rejected;
+        uint32_t tx_overflow;
+        uint32_t tx_success;
+        uint32_t tx_timedout;
+        uint32_t tx_abort;
+        uint32_t rx_received;
+        uint32_t rx_overflow;
+        uint32_t rx_errors;
+        uint32_t num_busoff_err;
         uint32_t num_events;
         uint32_t ecr;
         uint32_t fdf_tx_requests;
@@ -233,14 +239,6 @@ public:
     // fetch stats text and return the size of the same,
     // results available via @SYS/can0_stats.txt or @SYS/can1_stats.txt 
     void get_stats(ExpandingString &str) override;
-
-    /*
-      return statistics structure
-     */
-    const bus_stats_t *get_statistics(void) const override {
-        return &stats;
-    }
-
 #endif
     /************************************
      * Methods used inside interrupt    *

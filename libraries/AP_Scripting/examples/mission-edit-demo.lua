@@ -1,7 +1,5 @@
 -- mission editing demo lua script.
 -- by Buzz 2020
--- luacheck: only 0
-
 current_pos = nil
 home = 0
 a = {}

@@ -5,17 +5,15 @@
  *
  */
 
-#include "AP_Airspeed_config.h"
-
-#if AP_AIRSPEED_ENABLED
-
 #include <AP_Common/AP_Common.h>
+#include <AP_HAL/AP_HAL.h>
 #include <AP_Math/AP_Math.h>
 #include <GCS_MAVLink/GCS.h>
 #include <AP_Baro/AP_Baro.h>
 
 #include "AP_Airspeed.h"
 
+extern const AP_HAL::HAL& hal;
 
 // constructor - fill in all the initial values
 Airspeed_Calibration::Airspeed_Calibration()
@@ -86,7 +84,7 @@ float Airspeed_Calibration::update(float airspeed, const Vector3f &vg, int16_t m
     state += KG*(TAS_mea - TAS_pred); // [3 x 1] + [3 x 1] * [1 x 1]
 
     // Update the covariance matrix
-    Vector3f HP2 = H_TAS.row_times_mat(P);
+    Vector3f HP2 = H_TAS * P;
     P -= KG.mul_rowcol(HP2);
 
     // force symmetry on the covariance matrix - necessary due to rounding
@@ -168,7 +166,6 @@ void AP_Airspeed::update_calibration(const Vector3f &vground, int16_t max_airspe
 }
 
 
-#if HAL_GCS_ENABLED
 void AP_Airspeed::send_airspeed_calibration(const Vector3f &vground)
 {
 #if AP_AIRSPEED_AUTOCAL_ENABLE
@@ -190,6 +187,3 @@ void AP_Airspeed::send_airspeed_calibration(const Vector3f &vground)
                                   (const char *)&packet);
 #endif // AP_AIRSPEED_AUTOCAL_ENABLE
 }
-#endif  // HAL_GCS_ENABLED
-
-#endif  // AP_AIRSPEED_ENABLED

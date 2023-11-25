@@ -17,7 +17,8 @@
 #include "AP_Filesystem.h"
 #include <AP_HAL/AP_HAL.h>
 
-#if AP_FILESYSTEM_ESP32_ENABLED
+#if HAVE_FILESYSTEM_SUPPORT
+#if CONFIG_HAL_BOARD == HAL_BOARD_ESP32
 
 #define FSDEBUG 0
 
@@ -88,14 +89,6 @@ int AP_Filesystem_ESP32::unlink(const char *pathname)
     printf("DO unlink %s \n", pathname);
 #endif
     return ::unlink(pathname);
-}
-
-int AP_Filesystem_ESP32::rename(const char *oldpath, const char *newpath)
-{
-#if FSDEBUG
-    printf("DO rename %s \n", oldpath, newpath);
-#endif
-    return ::rename(oldpath, newpath);
 }
 
 int AP_Filesystem_ESP32::mkdir(const char *pathname)
@@ -198,4 +191,5 @@ bool AP_Filesystem_ESP32::set_mtime(const char *filename, const uint32_t mtime_s
     return utime(filename, &times) == 0;
 }
 
-#endif  // AP_FILESYSTEM_ESP32_ENABLED
+#endif // CONFIG_HAL_BOARD
+#endif

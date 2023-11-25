@@ -21,7 +21,7 @@
 #include <AP_HAL/AP_HAL_Boards.h>
 
 #ifndef AP_ROBOTISSERVO_ENABLED
-#define AP_ROBOTISSERVO_ENABLED BOARD_FLASH_SIZE > 1024
+#define AP_ROBOTISSERVO_ENABLED (!HAL_MINIMIZE_FEATURES && BOARD_FLASH_SIZE > 1024)
 #endif
 
 #if AP_ROBOTISSERVO_ENABLED
@@ -34,7 +34,8 @@ public:
     AP_RobotisServo();
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_RobotisServo);
+    AP_RobotisServo(const AP_RobotisServo &other) = delete;
+    AP_RobotisServo &operator=(const AP_RobotisServo&) = delete;
 
     static const struct AP_Param::GroupInfo var_info[];
     

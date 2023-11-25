@@ -79,17 +79,7 @@ int32_t AP_L1_Control::get_yaw_sensor() const
 int32_t AP_L1_Control::nav_roll_cd(void) const
 {
     float ret;
-	/*
-		formula can be obtained through equations of balanced spiral:
-		liftForce * cos(roll) = gravityForce * cos(pitch);
-		liftForce * sin(roll) = gravityForce * lateralAcceleration / gravityAcceleration; // as mass = gravityForce/gravityAcceleration
-		see issue 24319 [https://github.com/ArduPilot/ardupilot/issues/24319]
-		Multiplier 100.0f is for converting degrees to centidegrees
-		Made changes to avoid zero division as proposed by Andrew Tridgell: https://github.com/ArduPilot/ardupilot/pull/24331#discussion_r1267798397		 
-	*/
-	float pitchLimL1 = radians(60); // Suggestion: constraint may be modified to pitch limits if their absolute values are less than 90 degree and more than 60 degrees.
-	float pitchL1 = constrain_float(_ahrs.pitch,-pitchLimL1,pitchLimL1);
-    ret = degrees(atanf(_latAccDem * (1.0f/(GRAVITY_MSS * cosf(pitchL1))))) * 100.0f;
+    ret = cosf(_ahrs.pitch)*degrees(atanf(_latAccDem * (1.0f/GRAVITY_MSS)) * 100.0f);
     ret = constrain_float(ret, -9000, 9000);
     return ret;
 }
@@ -203,10 +193,10 @@ void AP_L1_Control::_prevent_indecision(float &Nu)
 }
 
 // update L1 control for waypoint navigation
-void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &next_WP, float dist_min)
+void AP_L1_Control::update_waypoint(const struct Location &prev_WP, const struct Location &next_WP, float dist_min)
 {
 
-    Location _current_loc;
+    struct Location _current_loc;
     float Nu;
     float xtrackVel;
     float ltrackVel;
@@ -240,11 +230,7 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
 
     //Calculate groundspeed
     float groundSpeed = _groundspeed_vector.length();
-
-    // check if we are moving in the direction of the front of the vehicle
-    const bool moving_forwards = fabsf(wrap_PI(_groundspeed_vector.angle() - get_yaw())) < M_PI_2;
-
-    if (groundSpeed < 0.1f || !moving_forwards) {
+    if (groundSpeed < 0.1f) {
         // use a small ground speed vector in the right direction,
         // allowing us to use the compass heading at zero GPS velocity
         groundSpeed = 0.1f;
@@ -346,9 +332,9 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
 }
 
 // update L1 control for loitering
-void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_t loiter_direction)
+void AP_L1_Control::update_loiter(const struct Location &center_WP, float radius, int8_t loiter_direction)
 {
-    Location _current_loc;
+    struct Location _current_loc;
 
     // scale loiter radius with square of EAS2TAS to allow us to stay
     // stable at high altitude

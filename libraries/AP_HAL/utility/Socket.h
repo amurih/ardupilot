@@ -18,9 +18,6 @@
 #pragma once
 
 #include <AP_HAL/AP_HAL.h>
-#include <AP_Networking/AP_Networking_Config.h>
-#if AP_NETWORKING_SOCKETS_ENABLED
-
 #if HAL_OS_SOCKETS
 
 #include <fcntl.h>
@@ -31,10 +28,6 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
-#elif AP_NETWORKING_BACKEND_CHIBIOS
-#include <AP_Networking/AP_Networking_ChibiOS.h>
-#include <lwip/sockets.h>
-#endif
 
 class SocketAPM {
 public:
@@ -43,7 +36,6 @@ public:
     ~SocketAPM();
 
     bool connect(const char *address, uint16_t port);
-    bool connect_timeout(const char *address, uint16_t port, uint32_t timeout_ms);
     bool bind(const char *address, uint16_t port);
     bool reuseaddress() const;
     bool set_blocking(bool blocking) const;
@@ -79,4 +71,4 @@ private:
     void make_sockaddr(const char *address, uint16_t port, struct sockaddr_in &sockaddr);
 };
 
-#endif // AP_NETWORKING_SOCKETS_ENABLED
+#endif // HAL_OS_SOCKETS

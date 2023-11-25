@@ -27,15 +27,13 @@
 #include "hwdef/common/flash.h"
 #include <AP_ROMFS/AP_ROMFS.h>
 #include <AP_Common/ExpandingString.h>
-#include <AP_InternalError/AP_InternalError.h>
 #include "sdcard.h"
 #include "shared_dma.h"
-#if defined(HAL_PWM_ALARM) || HAL_DSHOT_ALARM_ENABLED || HAL_CANMANAGER_ENABLED || HAL_USE_PWM == TRUE
+#if defined(HAL_PWM_ALARM) || HAL_DSHOT_ALARM || HAL_CANMANAGER_ENABLED || HAL_USE_PWM == TRUE
 #include <AP_Notify/AP_Notify.h>
 #endif
 #if HAL_ENABLE_SAVE_PERSISTENT_PARAMS
 #include <AP_InertialSensor/AP_InertialSensor.h>
-#include <AP_OpenDroneID/AP_OpenDroneID.h>
 #endif
 #ifndef HAL_BOOTLOADER_BUILD
 #include <AP_Logger/AP_Logger.h>
@@ -46,11 +44,6 @@
 #include <AP_IOMCU/AP_IOMCU.h>
 extern AP_IOMCU iomcu;
 #endif
-
-#if AP_SIGNED_FIRMWARE && !defined(HAL_BOOTLOADER_BUILD)
-#include <AP_CheckFirmware/AP_CheckFirmware.h>
-#endif
-
 
 extern const AP_HAL::HAL& hal;
 
@@ -121,7 +114,7 @@ void *Util::std_realloc(void *addr, size_t size)
     return new_mem;
 }
 
-void *Util::heap_realloc(void *heap, void *ptr, size_t old_size, size_t new_size)
+void *Util::heap_realloc(void *heap, void *ptr, size_t new_size)
 {
     if (heap == nullptr) {
         return nullptr;
@@ -137,13 +130,7 @@ void *Util::heap_realloc(void *heap, void *ptr, size_t old_size, size_t new_size
     }
     void *new_mem = chHeapAlloc((memory_heap_t *)heap, new_size);
     if (new_mem != nullptr) {
-        const size_t old_size2 = chHeapGetSize(ptr);
-#if defined(HAL_DEBUG_BUILD) && !defined(IOMCU_FW)
-        if (new_size != 0 && old_size2 != old_size) {
-            INTERNAL_ERROR(AP_InternalError::error_t::invalid_arg_or_result);
-        }
-#endif
-        memcpy(new_mem, ptr, old_size2 > new_size ? new_size : old_size2);
+        memcpy(new_mem, ptr, chHeapGetSize(ptr) > new_size ? new_size : chHeapGetSize(ptr));
         chHeapFree(ptr);
     }
     return new_mem;
@@ -180,7 +167,7 @@ bool Util::toneAlarm_init(uint8_t types)
 #endif
     _toneAlarm_types = types;
 
-#if HAL_USE_PWM != TRUE && !HAL_DSHOT_ALARM_ENABLED && !HAL_CANMANAGER_ENABLED
+#if HAL_USE_PWM != TRUE && !HAL_DSHOT_ALARM && !HAL_CANMANAGER_ENABLED
     // Nothing to do
     return false;
 #else
@@ -218,7 +205,7 @@ void Util::toneAlarm_set_buzzer_tone(float frequency, float volume, uint32_t dur
         }
     }
 #endif // HAL_USE_PWM
-#if HAL_DSHOT_ALARM_ENABLED
+#if HAL_DSHOT_ALARM
     // don't play the motors while flying
     if (!(_toneAlarm_types & AP_Notify::Notify_Buzz_DShot) || get_soft_armed() || hal.rcout->get_dshot_esc_type() != RCOutput::DSHOT_ESC_BLHELI) {
         return;
@@ -237,7 +224,7 @@ void Util::toneAlarm_set_buzzer_tone(float frequency, float volume, uint32_t dur
     } else {  // G+
         hal.rcout->send_dshot_command(RCOutput::DSHOT_BEEP5, RCOutput::ALL_CHANNELS, duration_ms);
     }
-#endif // HAL_DSHOT_ALARM_ENABLED
+#endif // HAL_DSHOT_ALARM
 }
 
 /*
@@ -256,20 +243,17 @@ uint64_t Util::get_hw_rtc() const
     return stm32_get_utc_usec();
 }
 
+#if !defined(HAL_NO_FLASH_SUPPORT) && !defined(HAL_NO_ROMFS_SUPPORT)
+
+#ifndef HAL_BOOTLOADER_BUILD
 #include <GCS_MAVLink/GCS.h>
-
-#if AP_BOOTLOADER_FLASHING_ENABLED
-
 #if HAL_GCS_ENABLED
 #define Debug(fmt, args ...)  do { gcs().send_text(MAV_SEVERITY_INFO, fmt, ## args); } while (0)
 #endif // HAL_GCS_ENABLED
+#endif // ifndef HAL_BOOT_LOADER_BUILD
 
 #ifndef Debug
 #define Debug(fmt, args ...)  do { hal.console->printf(fmt, ## args); } while (0)
-#endif
-
-#ifdef HAL_NO_FLASH_SUPPORT
-#error "Bootloader-flashing enabled but no flashing support"
 #endif
 
 Util::FlashBootloader Util::flash_bootloader()
@@ -284,18 +268,6 @@ Util::FlashBootloader Util::flash_bootloader()
         Debug("failed to find %s\n", fw_name);
         return FlashBootloader::NOT_AVAILABLE;
     }
-
-#if AP_SIGNED_FIRMWARE
-    if (!AP_CheckFirmware::check_signed_bootloader(fw, fw_size)) {
-        // don't allow flashing of an unsigned bootloader in a secure
-        // setup. This prevents the easy mistake of leaving an
-        // unsigned bootloader in ROMFS, which would give a trivail
-        // way to bypass signing
-        AP_ROMFS::free(fw);
-        return FlashBootloader::NOT_SIGNED;
-    }
-#endif
-
     // make sure size is multiple of 32
     fw_size = (fw_size + 31U) & ~31U;
 
@@ -379,29 +351,27 @@ Util::FlashBootloader Util::flash_bootloader()
     AP_ROMFS::free(fw);
     return FlashBootloader::FAIL;
 }
-#endif // AP_BOOTLOADER_FLASHING_ENABLED
+#endif // !HAL_NO_FLASH_SUPPORT && !HAL_NO_ROMFS_SUPPORT
 
 /*
   display system identifer - board type and serial number
  */
-bool Util::get_system_id(char buf[50])
+bool Util::get_system_id(char buf[40])
 {
     uint8_t serialid[12];
-    char board_name[24];
+    char board_name[14];
 
     memcpy(serialid, (const void *)UDID_START, 12);
-    // avoid board names greater than 23 chars (sizeof includes null char, so allow 24 bytes total)
-    static_assert(sizeof(CHIBIOS_SHORT_BOARD_NAME) <= 24, "CHIBIOS_SHORT_BOARD_NAME must be 23 characters or less");
-    strncpy(board_name, CHIBIOS_SHORT_BOARD_NAME, 23);
-    board_name[23] = 0;
+    strncpy(board_name, CHIBIOS_SHORT_BOARD_NAME, 13);
+    board_name[13] = 0;
 
     // this format is chosen to match the format used by HAL_PX4
-    snprintf(buf, 50, "%s %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X",
+    snprintf(buf, 40, "%s %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X",
              board_name,
              (unsigned)serialid[3], (unsigned)serialid[2], (unsigned)serialid[1], (unsigned)serialid[0],
              (unsigned)serialid[7], (unsigned)serialid[6], (unsigned)serialid[5], (unsigned)serialid[4],
              (unsigned)serialid[11], (unsigned)serialid[10], (unsigned)serialid[9],(unsigned)serialid[8]);
-    buf[49] = 0;
+    buf[39] = 0;
     return true;
 }
 
@@ -425,7 +395,7 @@ bool Util::was_watchdog_reset() const
 __RAMFUNC__ void Util::thread_info(ExpandingString &str)
 {
 #if HAL_ENABLE_THREAD_STATISTICS
-    uint64_t cumulative_cycles = currcore->kernel_stats.m_crit_isr.cumulative;
+    uint64_t cumulative_cycles = ch.kernel_stats.m_crit_isr.cumulative;
     for (thread_t *tp = chRegFirstThread(); tp; tp = chRegNextThread(tp)) {
         if (tp->stats.best > 0) { // not run
             cumulative_cycles += (uint64_t)tp->stats.cumulative;
@@ -438,8 +408,8 @@ __RAMFUNC__ void Util::thread_info(ExpandingString &str)
     str.printf("ThreadsV2\nISR           PRI=255 sp=%p STACK=%u/%u LOAD=%4.1f%%\n",
                 &__main_stack_base__,
                 unsigned(stack_free(&__main_stack_base__)),
-                unsigned(isr_stack_size), 100.0f * float(currcore->kernel_stats.m_crit_isr.cumulative) / float(cumulative_cycles));
-    currcore->kernel_stats.m_crit_isr.cumulative = 0U;
+                unsigned(isr_stack_size), 100.0f * float(ch.kernel_stats.m_crit_isr.cumulative) / float(cumulative_cycles));
+    ch.kernel_stats.m_crit_isr.cumulative = 0U;
 #else
     str.printf("ThreadsV2\nISR           PRI=255 sp=%p STACK=%u/%u\n",
                 &__main_stack_base__,
@@ -491,7 +461,7 @@ __RAMFUNC__ void Util::thread_info(ExpandingString &str)
 // request information on dma contention
 void Util::dma_info(ExpandingString &str)
 {
-#if AP_HAL_SHARED_DMA_ENABLED
+#ifndef HAL_NO_SHARED_DMA
     ChibiOS::Shared_DMA::dma_info(str);
 #endif
 }
@@ -535,12 +505,6 @@ bool Util::get_persistent_params(ExpandingString &str) const
         ins->get_persistent_params(str);
     }
 #endif
-#if AP_OPENDRONEID_ENABLED
-    const auto *odid = AP_OpenDroneID::get_singleton();
-    if (odid) {
-        odid->get_persistent_params(str);
-    }
-#endif
     if (str.has_failed_allocation() || str.get_length() <= strlen(persistent_header)) {
         // no data
         return false;
@@ -565,38 +529,6 @@ bool Util::load_persistent_params(ExpandingString &str) const
     if (s) {
         str.append(s, (addr+size) - uint32_t(s));
         return !str.has_failed_allocation();
-    }
-    return false;
-}
-
-/*
-  get a persistent variable by name,
-  len is the length of the value buffer, and is updated with the length of the value
- */
-bool Util::get_persistent_param_by_name(const char *name, char* value, size_t& len) const
-{
-    ExpandingString persistent_params {};
-    if (!load_persistent_params(persistent_params)) {
-        return false;
-    }
-    char *s = persistent_params.get_writeable_string();
-    if (s == nullptr) {
-        return false;
-    }
-    char *saveptr;
-    s += strlen(persistent_header);
-    for (char *p = strtok_r(s, "\n", &saveptr);
-         p; p = strtok_r(nullptr, "\n", &saveptr)) {
-        char *eq = strchr(p, int('='));
-        if (eq) {
-            *eq = 0;
-            if (strcmp(p, name) == 0) {
-                // also get the length of the value
-                strncpy(value, eq+1, len);
-                len = strlen(value);
-                return true;
-            }
-        }
     }
     return false;
 }
@@ -706,7 +638,9 @@ bool Util::get_random_vals(uint8_t* data, size_t size)
 {
 #if HAL_USE_HW_RNG && defined(RNG)
     size_t true_random_vals = stm32_rand_generate_nonblocking(data, size);
-    if (true_random_vals != size) {
+    if (true_random_vals == size) {
+        return true;
+    } else {
         if (!(true_random_vals % 2)) {
             data[true_random_vals] = (uint8_t)(get_random16() & 0xFF);
             true_random_vals++;
@@ -717,18 +651,10 @@ bool Util::get_random_vals(uint8_t* data, size_t size)
             true_random_vals+=sizeof(uint16_t);
         }
     }
-#else
-    size_t true_random_vals = 0;
-    while(true_random_vals < size) {
-        uint16_t val = get_random16();
-        memcpy(&data[true_random_vals], &val, sizeof(uint16_t));
-        true_random_vals+=sizeof(uint16_t);
-    }
-    if (size % 2) {
-        data[size-1] = get_random16() & 0xFF;
-    }
-#endif
     return true;
+#else
+    return false;
+#endif
 }
 
 /**
@@ -796,9 +722,10 @@ void Util::log_stack_info(void)
 #endif
 }
 
-#if AP_CRASHDUMP_ENABLED
+#if !defined(HAL_BOOTLOADER_BUILD)
 size_t Util::last_crash_dump_size() const
 {
+#if HAL_CRASHDUMP_ENABLE
     // get dump size
     uint32_t size = stm32_crash_dump_size();
     char* dump_start = (char*)stm32_crash_dump_addr();
@@ -811,25 +738,22 @@ size_t Util::last_crash_dump_size() const
         size = stm32_crash_dump_max_size();
     }
     return size;
+#endif
+    return 0;
 }
 
 void* Util::last_crash_dump_ptr() const
 {
+#if HAL_CRASHDUMP_ENABLE
     if (last_crash_dump_size() == 0) {
         return nullptr;
     }
     return (void*)stm32_crash_dump_addr();
-}
-#endif // AP_CRASHDUMP_ENABLED
-
-#if HAL_ENABLE_DFU_BOOT && !defined(HAL_BOOTLOADER_BUILD)
-void Util::boot_to_dfu()
-{
-    hal.util->persistent_data.boot_to_dfu = true;
-    stm32_watchdog_save((uint32_t *)&hal.util->persistent_data, (sizeof(hal.util->persistent_data)+3)/4);
-    hal.scheduler->reboot(false);
-}
+#else
+    return nullptr;
 #endif
+}
+#endif // HAL_BOOTLOADER_BUILD
 
 // set armed state
 void Util::set_soft_armed(const bool b)

@@ -1,17 +1,20 @@
 #pragma once
 
-#include "AP_OpticalFlow_config.h"
+#include "AP_OpticalFlow.h"
+
+#ifndef AP_OPTICALFLOW_UPFLOW_ENABLED
+#define AP_OPTICALFLOW_UPFLOW_ENABLED AP_OPTICALFLOW_ENABLED
+#endif
 
 #if AP_OPTICALFLOW_UPFLOW_ENABLED
 
-#include "AP_OpticalFlow_Backend.h"
 #include <AP_HAL/utility/OwnPtr.h>
 
 class AP_OpticalFlow_UPFLOW : public OpticalFlow_backend
 {
 public:
     /// constructor
-    AP_OpticalFlow_UPFLOW(AP_OpticalFlow &_frontend, AP_HAL::UARTDriver *uart);
+    AP_OpticalFlow_UPFLOW(OpticalFlow &_frontend, AP_HAL::UARTDriver *uart);
 
     // initialise the sensor
     void init() override;
@@ -20,7 +23,7 @@ public:
     void update(void) override;
 
     // detect if the sensor is available
-    static AP_OpticalFlow_UPFLOW *detect(AP_OpticalFlow &_frontend);
+    static AP_OpticalFlow_UPFLOW *detect(OpticalFlow &_frontend);
 
 private:
     struct PACKED UpixelsOpticalFlow {

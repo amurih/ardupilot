@@ -12,17 +12,13 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include "AP_Compass_AK8963.h"
-
-#if AP_COMPASS_AK8963_ENABLED
-
 #include <assert.h>
 #include <utility>
 
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
 
+#include "AP_Compass_AK8963.h"
 #include <AP_InertialSensor/AP_InertialSensor_Invensense.h>
 
 #define AK8963_I2C_ADDR                                 0x0c
@@ -94,7 +90,7 @@ AP_Compass_Backend *AP_Compass_AK8963::probe_mpu9250(AP_HAL::OwnPtr<AP_HAL::I2CD
     if (!dev) {
         return nullptr;
     }
-#if AP_INERTIALSENSOR_ENABLED
+#if HAL_INS_ENABLED
     AP_InertialSensor &ins = *AP_InertialSensor::get_singleton();
 
     /* Allow MPU9250 to shortcut auxiliary bus and host bus */
@@ -107,7 +103,7 @@ AP_Compass_Backend *AP_Compass_AK8963::probe_mpu9250(AP_HAL::OwnPtr<AP_HAL::I2CD
 AP_Compass_Backend *AP_Compass_AK8963::probe_mpu9250(uint8_t mpu9250_instance,
                                                      enum Rotation rotation)
 {
-#if AP_INERTIALSENSOR_ENABLED
+#if HAL_INS_ENABLED
     AP_InertialSensor &ins = *AP_InertialSensor::get_singleton();
 
     AP_AK8963_BusDriver *bus =
@@ -316,7 +312,7 @@ AP_AK8963_BusDriver_Auxiliary::AP_AK8963_BusDriver_Auxiliary(AP_InertialSensor &
      * Only initialize members. Fails are handled by configure or while
      * getting the semaphore
      */
-#if AP_INERTIALSENSOR_ENABLED
+#if HAL_INS_ENABLED
     _bus = ins.get_auxiliary_bus(backend_id, backend_instance);
     if (!_bus) {
         return;
@@ -404,5 +400,3 @@ uint32_t AP_AK8963_BusDriver_Auxiliary::get_bus_id(void) const
 {
     return _bus->get_bus_id();
 }
-
-#endif  // AP_COMPASS_AK8963_ENABLED

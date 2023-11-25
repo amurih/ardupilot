@@ -23,7 +23,8 @@ public:
     };
 
     /* Do not allow copies */
-    CLASS_NO_COPY(PerfInfo);
+    PerfInfo(const PerfInfo &other) = delete;
+    PerfInfo &operator=(const PerfInfo&) = delete;
 
     void reset();
     void ignore_this_loop();
@@ -35,7 +36,6 @@ public:
     uint32_t get_avg_time() const;
     uint32_t get_stddev_time() const;
     float    get_filtered_time() const;
-    float get_filtered_loop_rate_hz() const;
     void set_loop_rate(uint16_t rate_hz);
 
     void update_logging() const;

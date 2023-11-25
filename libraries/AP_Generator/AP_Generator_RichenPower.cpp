@@ -15,13 +15,11 @@
 
 #include "AP_Generator_RichenPower.h"
 
-#if AP_GENERATOR_RICHENPOWER_ENABLED
+#if HAL_GENERATOR_ENABLED
 
 #include <AP_Logger/AP_Logger.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 #include <AP_Vehicle/AP_Vehicle.h>
-#include <GCS_MAVLink/GCS.h>
-#include <SRV_Channel/SRV_Channel.h>
 
 #include <AP_HAL/utility/sparse-endian.h>
 
@@ -190,7 +188,7 @@ bool AP_Generator_RichenPower::generator_ok_to_run() const
 constexpr float AP_Generator_RichenPower::heat_required_for_run()
 {
     // assume that heat is proportional to RPM.  Return a number
-    // proportional to RPM.  Reduce it to account for the cooling some%/s
+    // proportial to RPM.  Reduce it to account for the cooling some%/s
     // cooling
     return (45 * IDLE_RPM) * heat_environment_loss_30s;
 }
@@ -235,9 +233,7 @@ void AP_Generator_RichenPower::update(void)
 
     update_frontend_readings();
 
-#if HAL_LOGGING_ENABLED
     Log_Write();
-#endif
 }
 
 // update_runstate updates the servo output we use to control the
@@ -310,7 +306,6 @@ void AP_Generator_RichenPower::update_runstate()
     }
 }
 
-#if HAL_LOGGING_ENABLED
 // log generator status to the onboard log
 void AP_Generator_RichenPower::Log_Write()
 {
@@ -339,7 +334,6 @@ void AP_Generator_RichenPower::Log_Write()
         last_reading.mode
         );
 }
-#endif
 
 // generator prearm checks; notably, if we never see a generator we do
 // not run the checks.  Generators are attached/detached at will, and
@@ -518,4 +512,4 @@ bool AP_Generator_RichenPower::run()
     set_pilot_desired_runstate(RunState::RUN);
     return true;
 }
-#endif  // AP_GENERATOR_RICHENPOWER_ENABLED
+#endif

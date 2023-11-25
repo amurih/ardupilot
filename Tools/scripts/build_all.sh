@@ -3,6 +3,8 @@
 # This helps when doing large merges
 # Andrew Tridgell, November 2011
 
+. config.mk
+
 set -e
 set -x
 

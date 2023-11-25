@@ -19,7 +19,7 @@
 #include <AP_ESC_Telem/AP_ESC_Telem.h>
 #include "AP_BattMonitor_Backend.h"
 
-#if AP_BATTERY_ESC_ENABLED
+#if HAL_WITH_ESC_TELEM
 
 class AP_BattMonitor_ESC :public AP_BattMonitor_Backend
 {
@@ -52,4 +52,4 @@ private:
     float delta_mah;
 };
 
-#endif  // AP_BATTERY_ESC_ENABLED
+#endif

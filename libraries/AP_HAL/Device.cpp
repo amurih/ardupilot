@@ -30,7 +30,7 @@
   Periodically (say at 50Hz) you should then call
   check_next_register(). If that returns false then the sensor has had
   a corrupted register value. Marking the sensor as unhealthy is
-  appropiate. The bad value will be corrected
+  approriate. The bad value will be corrected
  */
 
 /*

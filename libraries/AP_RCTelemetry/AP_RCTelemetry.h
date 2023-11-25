@@ -31,7 +31,8 @@ public:
     virtual ~AP_RCTelemetry() {};
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_RCTelemetry);
+    AP_RCTelemetry(const AP_RCTelemetry &other) = delete;
+    AP_RCTelemetry &operator=(const AP_RCTelemetry&) = delete;
 
     // add statustext message to message queue
     virtual void queue_message(MAV_SEVERITY severity, const char *text);

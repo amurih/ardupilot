@@ -17,11 +17,6 @@ are:
 
 this must be set to 1 to enable the script
 
-## QUIK_RC_FUNC
-
-The RCz_OPTIONS scripting function binding to be used for this script.
-Default RCz_OPTIONS binding is 300 (scripting1).
-
 ## QUIK_AXES
 
 This is the set of axes that the tune will run on. The default is 7,
@@ -99,17 +94,6 @@ this to a non-zero value allows you to use quicktune with a 2-position
 switch, with the switch settings as low and mid positions. A zero
 value disables auto-save and you need to have a 3 position switch.
 
-## QUIK_MAX_REDUCE
-
-This controls how much quicktune is allowed to lower gains from the
-original gains. If the vehicle already has a reasonable tune and is
-not oscillating then you can set this to zero to prevent gain
-reductions. The default of 20% is reasonable for most vehicles. Using
-a maximum gain reduction lowers the chance of an angle P oscillation
-happening if quicktune gets a false positive oscillation at a low
-gain, which can result in very low rate gains and a dangerous angle P
-oscillation.
-
 # Operation
 
 First you should setup harmonic notch filtering using the guide in the
@@ -124,18 +108,15 @@ refresh parameters. Then set QUIK_ENABLE to 1.
 You will then need to setup a 3 position switch on an available RC
 input channel for controlling the tune (or 2 position if you set
 QUIK_AUTO_SAVE). If for example channel 6 is available with a 3
-position switch then you should set RC6_OPTION=300 (scripting1) to associate the
+position switch then you should set RC6_OPTION=300 to association the
 tuning control with that switch.
-
-If needed, the QUIK_RC_FUNC option can be used to associate the tuning switch
-with a different scripting binding such as RCz_OPTION = 302 (scripting3).
 
 You should then takeoff and put the vehicle into QLOITER mode (for
 quadplanes) or LOITER mode (for multicopters) and have it in a steady
 hover in low wind.
 
-Then move the control switch you setup with option 300 (or via QUIK_RC_FUNC)
-to the middle position. This will start the tuning process. You will see text
+Then move the control switch you setup with option 300 to the middle
+position. This will start the tuning process. You will see text
 messages on the ground station showing the progress of the tune. As
 the aircraft reaches the oscillation limit of each parameter it will
 start a small oscillation, then it will reduce that gain by the
@@ -166,19 +147,3 @@ values. Parameters will also be reverted if you disarm before saving.
 
 If the pilot gives roll, pitch or yaw input while tuning then the tune
 is paused until 4 seconds after the pilot input stops.
-
-# Using a Two Position Switch
-
-Some transitters only have 2 position switches, with no 3 position
-switches available. To support quicktune with a 2 position switch
-please set the following:
-
- - set QUIK_OPTIONS to 1 to indicate the use of a 2 position switch
- - set QUIK_AUTO_SAVE to 10 to automatically save the tune 10 seconds after tuning is done
-
-with these two options the tuning will start when the switch gives a
-PWM value of over 1800. Ten seconds after tuning is complete the tune
-will automatically save.
-
-
-

@@ -94,14 +94,16 @@ private:
     void configure_gyro();
 
     /**
-     * Reset FIFO.
-     */
-    void fifo_reset();
-
-    /**
      * Configure FIFO.
+     *
+     * @return true on success, false otherwise.
      */
     void configure_fifo();
+
+    /**
+     * Device periodic callback to read data from the sensors.
+     */
+    void poll_data();
 
     /**
      * Read samples from fifo.
@@ -111,8 +113,6 @@ private:
     void parse_gyro_frame(const uint8_t* d);
 
     AP_HAL::OwnPtr<AP_HAL::Device> _dev;
-    AP_HAL::Device::PeriodicHandle periodic_handle;
-
     enum Rotation _rotation;
 
     uint8_t _accel_instance;

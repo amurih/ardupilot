@@ -1,11 +1,8 @@
-#include "AP_BattMonitor_config.h"
-
-#if AP_BATTERY_LTC2946_ENABLED
-
+#include "AP_BattMonitor_LTC2946.h"
 #include <GCS_MAVLink/GCS.h>
 #include <AP_HAL/utility/sparse-endian.h>
 
-#include "AP_BattMonitor_LTC2946.h"
+#if HAL_BATTMON_LTC2946_ENABLED
 
 extern const AP_HAL::HAL& hal;
 
@@ -110,4 +107,4 @@ void AP_BattMonitor_LTC2946::timer(void)
     accumulate.count++;
 }
 
-#endif // AP_BATTERY_LTC2946_ENABLED
+#endif // HAL_BATTMON_LTC2946_ENABLED

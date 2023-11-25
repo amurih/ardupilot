@@ -28,7 +28,6 @@ private:
     enum class RDID_type :uint8_t {
         Cypress,
         Fujitsu,
-        Petabytes
     };
 
     struct ramtron_id {

@@ -1,6 +1,6 @@
 #include "AP_Compass_SITL.h"
 
-#if AP_COMPASS_SITL_ENABLED
+#if AP_SIM_COMPASS_ENABLED
 
 #include <AP_HAL/AP_HAL.h>
 
@@ -22,10 +22,8 @@ AP_Compass_SITL::AP_Compass_SITL()
                 _compass_instance[_num_compass] = instance;
                 set_dev_id(_compass_instance[_num_compass], dev_id);
 
-                if (_sitl->mag_save_ids) {
-                    // save so the compass always comes up configured in SITL
-                    save_dev_id(_compass_instance[_num_compass]);
-                }
+                // save so the compass always comes up configured in SITL
+                save_dev_id(_compass_instance[_num_compass]);
                 set_rotation(instance, ROTATION_NONE);
                 _num_compass++;
             }
@@ -53,7 +51,7 @@ AP_Compass_SITL::AP_Compass_SITL()
 
 
 /*
-  create correction matrix for diagonals and off-diagonals
+  create correction matrix for diagnonals and off-diagonals
 */
 void AP_Compass_SITL::_setup_eliptical_correcion(uint8_t i)
 {
@@ -156,4 +154,4 @@ void AP_Compass_SITL::read()
         drain_accumulated_samples(_compass_instance[i], nullptr);
     }
 }
-#endif  // AP_COMPASS_SITL_ENABLED
+#endif  // AP_SIM_COMPASS_ENABLED

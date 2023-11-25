@@ -4,12 +4,6 @@
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_RangeFinder/AP_RangeFinder_Backend.h>
-#include <GCS_MAVLink/GCS_Dummy.h>
-
-const struct AP_Param::GroupInfo        GCS_MAVLINK_Parameters::var_info[] = {
-    AP_GROUPEND
-};
-GCS_Dummy _gcs;
 
 void setup();
 void loop();

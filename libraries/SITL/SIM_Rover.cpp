@@ -63,10 +63,10 @@ float SimRover::turn_circle(float steering) const
 float SimRover::calc_yaw_rate(float steering, float speed)
 {
     if (skid_steering) {
-        return constrain_float(steering * skid_turn_rate, -MAX_YAW_RATE, MAX_YAW_RATE);
+        return steering * skid_turn_rate;
     }
     if (vectored_thrust) {
-        return constrain_float(steering * vectored_turn_rate_max, -MAX_YAW_RATE, MAX_YAW_RATE);
+        return steering * vectored_turn_rate_max;
     }
     if (fabsf(steering) < 1.0e-6 or fabsf(speed) < 1.0e-6) {
         return 0;
@@ -74,7 +74,7 @@ float SimRover::calc_yaw_rate(float steering, float speed)
     float d = turn_circle(steering);
     float c = M_PI * d;
     float t = c / speed;
-    float rate = constrain_float(360.0f / t, -MAX_YAW_RATE, MAX_YAW_RATE);
+    float rate = 360.0f / t;
     return rate;
 }
 

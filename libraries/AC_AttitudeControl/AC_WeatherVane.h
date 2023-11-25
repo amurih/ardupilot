@@ -24,7 +24,6 @@ class AC_WeatherVane {
 
         // Different options for the direction that vehicle will turn into wind
         enum class Direction {
-            TAKEOFF_OR_LAND_ONLY = -1,
             OFF = 0,
             NOSE_IN = 1, // Only nose into wind
             NOSE_OR_TAIL_IN = 2, // Nose in or tail into wind, which ever is closest
@@ -36,7 +35,7 @@ class AC_WeatherVane {
             PITCH_ENABLE = (1<<0),
         };
     
-        // Parameters
+        // Paramaters
         AP_Int8 _direction;
         AP_Float _gain;
         AP_Float _min_dz_ang_deg;

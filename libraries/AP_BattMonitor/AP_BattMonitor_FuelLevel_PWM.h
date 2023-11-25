@@ -1,10 +1,7 @@
 #pragma once
 
-#include "AP_BattMonitor_Analog.h"
-
-#if AP_BATTERY_FUELLEVEL_PWM_ENABLED
-
 #include "AP_BattMonitor.h"
+#include "AP_BattMonitor_Analog.h"
 
 class AP_BattMonitor_FuelLevel_PWM : public AP_BattMonitor_Analog
 {
@@ -28,5 +25,3 @@ private:
 
     AP_HAL::PWMSource pwm_source;
 };
-
-#endif  // AP_BATTERY_FUELLEVEL_PWM_ENABLED

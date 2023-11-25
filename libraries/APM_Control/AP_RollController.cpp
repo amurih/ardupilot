@@ -20,8 +20,6 @@
 #include <AP_HAL/AP_HAL.h>
 #include "AP_RollController.h"
 #include <AP_AHRS/AP_AHRS.h>
-#include <AP_Scheduler/AP_Scheduler.h>
-#include <GCS_MAVLink/GCS.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -50,7 +48,7 @@ const AP_Param::GroupInfo AP_RollController::var_info[] = {
 
     // @Param: _RATE_P
     // @DisplayName: Roll axis rate controller P gain
-    // @Description: Roll axis rate controller P gain. Corrects in proportion to the difference between the desired roll rate vs actual roll rate
+    // @Description: Roll axis rate controller P gain.  Converts the difference between desired roll rate and actual roll rate into a motor speed output
     // @Range: 0.08 0.35
     // @Increment: 0.005
     // @User: Standard
@@ -64,7 +62,7 @@ const AP_Param::GroupInfo AP_RollController::var_info[] = {
 
     // @Param: _RATE_IMAX
     // @DisplayName: Roll axis rate controller I gain maximum
-    // @Description: Roll axis rate controller I gain maximum.  Constrains the maximum that the I term will output
+    // @Description: Roll axis rate controller I gain maximum.  Constrains the maximum motor output that the I gain will output
     // @Range: 0 1
     // @Increment: 0.01
     // @User: Standard
@@ -114,20 +112,13 @@ const AP_Param::GroupInfo AP_RollController::var_info[] = {
     // @Increment: 0.5
     // @User: Advanced
 
-    // @Param: _RATE_PDMX
-    // @DisplayName: Roll axis rate controller PD sum maximum
-    // @Description: Roll axis rate controller PD sum maximum.  The maximum/minimum value that the sum of the P and D term can output
-    // @Range: 0 1
-    // @Increment: 0.01
-    // @User: Advanced
-
     AP_SUBGROUPINFO(rate_pid, "_RATE_", 9, AP_RollController, AC_PID),
 
     AP_GROUPEND
 };
 
 // constructor
-AP_RollController::AP_RollController(const AP_FixedWing &parms)
+AP_RollController::AP_RollController(const AP_Vehicle::FixedWing &parms)
     : aparm(parms)
 {
     AP_Param::setup_object_defaults(this, var_info);
@@ -149,6 +140,8 @@ float AP_RollController::_get_rate_out(float desired_rate, float scaler, bool di
     float aspeed;
     float old_I = rate_pid.get_i();
 
+    rate_pid.set_dt(dt);
+
     if (!_ahrs.airspeed_estimate(aspeed)) {
         aspeed = 0;
     }
@@ -162,7 +155,7 @@ float AP_RollController::_get_rate_out(float desired_rate, float scaler, bool di
     //
     // note that we run AC_PID in radians so that the normal scaling
     // range for IMAX in AC_PID applies (usually an IMAX value less than 1.0)
-    rate_pid.update_all(radians(desired_rate) * scaler * scaler, rate_x * scaler * scaler, dt, limit_I);
+    rate_pid.update_all(radians(desired_rate) * scaler * scaler, rate_x * scaler * scaler, limit_I);
 
     if (underspeed) {
         // when underspeed we lock the integrator
@@ -172,8 +165,7 @@ float AP_RollController::_get_rate_out(float desired_rate, float scaler, bool di
     // FF should be scaled by scaler/eas2tas, but since we have scaled
     // the AC_PID target above by scaler*scaler we need to instead
     // divide by scaler*eas2tas to get the right scaling
-    const float ff = degrees(ff_scale * rate_pid.get_ff() / (scaler * eas2tas));
-    ff_scale = 1.0;
+    const float ff = degrees(rate_pid.get_ff() / (scaler * eas2tas));
 
     if (disable_integrator) {
         rate_pid.reset_I();
@@ -255,6 +247,7 @@ float AP_RollController::get_servo_out(int32_t angle_err, float scaler, bool dis
 
 void AP_RollController::reset_I()
 {
+    _pid_info.I = 0;
     rate_pid.reset_I();
 }
 

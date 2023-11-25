@@ -1189,9 +1189,7 @@ LUA_API void *lua_newuserdata (lua_State *L, size_t size) {
   api_incr_top(L);
   luaC_checkGC(L);
   lua_unlock(L);
-  void *udata = getudatamem(u);
-  memset(udata, 0, size);
-  return udata;
+  return getudatamem(u);
 }
 
 

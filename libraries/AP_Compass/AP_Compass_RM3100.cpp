@@ -19,8 +19,6 @@
  */
 #include "AP_Compass_RM3100.h"
 
-#if AP_COMPASS_RM3100_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 #include <utility>
 #include <AP_Math/AP_Math.h>
@@ -244,5 +242,3 @@ void AP_Compass_RM3100::read()
 {
 	drain_accumulated_samples(compass_instance);
 }
-
-#endif  // AP_COMPASS_RM3100_ENABLED

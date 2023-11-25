@@ -86,9 +86,6 @@ AP_GPS_SBF::read(void)
     uint32_t available_bytes = port->available();
     for (uint32_t i = 0; i < available_bytes; i++) {
         uint8_t temp = port->read();
-#if AP_GPS_DEBUG_LOGGING_ENABLED
-        log_data(&temp, 1);
-#endif
         ret |= parse(temp);
     }
 
@@ -401,7 +398,10 @@ AP_GPS_SBF::process_message(void)
 
             state.have_vertical_velocity = true;
 
-            velocity_to_speed_course(state);
+            float ground_vector_sq = state.velocity[0] * state.velocity[0] + state.velocity[1] * state.velocity[1];
+            state.ground_speed = (float)safe_sqrt(ground_vector_sq);
+
+            state.ground_course = wrap_360(degrees(atan2f(state.velocity[1], state.velocity[0])));
             state.rtk_age_ms = temp.MeanCorrAge * 10;
 
             // value is expressed as twice the rms error = int16 * 0.01/2
@@ -415,9 +415,7 @@ AP_GPS_SBF::process_message(void)
         if (temp.Latitude > -200000) {
             state.location.lat = (int32_t)(temp.Latitude * RAD_TO_DEG_DOUBLE * (double)1e7);
             state.location.lng = (int32_t)(temp.Longitude * RAD_TO_DEG_DOUBLE * (double)1e7);
-            state.have_undulation = true;
-            state.undulation = -temp.Undulation;
-            set_alt_amsl_cm(state, ((float)temp.Height - temp.Undulation) * 1e2f);
+            state.location.alt = (int32_t)(((float)temp.Height - temp.Undulation) * 1e2f);
         }
 
         if (temp.NrSV != 255) {

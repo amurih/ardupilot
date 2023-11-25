@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
 script to build the latest binaries for each vehicle type, ready to upload
@@ -20,6 +20,7 @@ import string
 import subprocess
 import sys
 import traceback
+import gzip
 
 # local imports
 import generate_manifest
@@ -35,27 +36,16 @@ else:
     running_python3 = True
 
 
-def topdir():
-    '''return path to ardupilot checkout directory.  This is to cope with
-    running on developer's machines (where autotest is typically
-    invoked from the root directory), and on the autotest server where
-    it is invoked in the checkout's parent directory.
-    '''
-    for path in [
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."),
-            "",
-            ]:
-        if os.path.exists(os.path.join(path, "libraries", "AP_HAL_ChibiOS")):
-            return path
-    raise Exception("Unable to find ardupilot checkout dir")
-
-
 def is_chibios_build(board):
     '''see if a board is using HAL_ChibiOS'''
     # cope with both running from Tools/scripts or running from cwd
-    hwdef_dir = os.path.join(topdir(), "libraries", "AP_HAL_ChibiOS", "hwdef")
-
-    return os.path.exists(os.path.join(hwdef_dir, board, "hwdef.dat"))
+    hwdef_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "libraries", "AP_HAL_ChibiOS", "hwdef")
+    if os.path.exists(os.path.join(hwdef_dir, board, "hwdef.dat")):
+        return True
+    hwdef_dir = os.path.join("libraries", "AP_HAL_ChibiOS", "hwdef")
+    if os.path.exists(os.path.join(hwdef_dir, board, "hwdef.dat")):
+        return True
+    return False
 
 
 def get_required_compiler(vehicle, tag, board):
@@ -67,6 +57,9 @@ def get_required_compiler(vehicle, tag, board):
     if not is_chibios_build(board):
         # only override compiler for ChibiOS builds
         return None
+    if vehicle == 'Sub' and tag in ['stable', 'beta']:
+        # sub stable and beta is on the old compiler
+        return "g++-6.3.1"
     # use 10.2.1 compiler for all other builds
     return "g++-10.2.1"
 
@@ -104,7 +97,7 @@ class build_binaries(object):
             waf = "./waf"
         else:
             waf = os.path.join(".", "modules", "waf", "waf-light")
-        cmd_list = ["python3", waf]
+        cmd_list = [waf]
         cmd_list.extend(args)
         env = None
         if compiler is not None:
@@ -121,10 +114,10 @@ class build_binaries(object):
                 raise Exception("BB-WAF: Missing compiler %s" % gcc_path)
         self.run_program("BB-WAF", cmd_list, env=env)
 
-    def run_program(self, prefix, cmd_list, show_output=True, env=None, force_success=False):
+    def run_program(self, prefix, cmd_list, show_output=True, env=None):
         if show_output:
             self.progress("Running (%s)" % " ".join(cmd_list))
-        p = subprocess.Popen(cmd_list, stdin=None,
+        p = subprocess.Popen(cmd_list, bufsize=1, stdin=None,
                              stdout=subprocess.PIPE, close_fds=True,
                              stderr=subprocess.STDOUT, env=env)
         output = ""
@@ -146,7 +139,7 @@ class build_binaries(object):
             if show_output:
                 print("%s: %s" % (prefix, x))
         (_, status) = returncode
-        if status != 0 and not force_success:
+        if status != 0 and show_output:
             self.progress("Process failed (%s)" %
                           str(returncode))
             raise subprocess.CalledProcessError(
@@ -219,12 +212,7 @@ is bob we will attempt to checkout bob-AVR'''
         '''
 
         try:
-            out = self.run_program(
-                'waf',
-                ["python3", './waf', 'configure', '--board=BOARDTEST'],
-                show_output=False,
-                force_success=True
-            )
+            out = self.run_program('waf', ['./waf', 'configure', '--board=BOARDTEST'], False)
             lines = out.split('\n')
             needles = ["BOARDTEST' (choose from", "BOARDTEST': choices are"]
             for line in lines:
@@ -237,10 +225,7 @@ is bob we will attempt to checkout bob-AVR'''
                     line = line.replace("'", "")
                     line = line.replace(" ", "")
                     boards = line.split(",")
-                    ret = board not in boards
-                    if ret:
-                        self.progress("Skipping board (%s) - not in board list" % board)
-                    return ret
+                    return board not in boards
         except IOError as e:
             if e.errno != 2:
                 raise
@@ -382,6 +367,24 @@ is bob we will attempt to checkout bob-AVR'''
             if e.errno != 17:  # EEXIST
                 raise e
 
+    def copyit(self, afile, adir, tag, src):
+        '''copies afile into various places, adding metadata'''
+        bname = os.path.basename(adir)
+        tdir = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(adir))), tag, bname)
+        if tag == "latest":
+            # we keep a permanent archive of all "latest" builds,
+            # their path including a build timestamp:
+            self.mkpath(adir)
+            self.progress("Copying %s to %s" % (afile, adir,))
+            shutil.copy(afile, adir)
+            self.addfwversion(adir, src)
+        # the most recent build of every tag is kept around:
+        self.progress("Copying %s to %s" % (afile, tdir))
+        self.mkpath(tdir)
+        self.addfwversion(tdir, src)
+        shutil.copy(afile, tdir)
+
     def touch_filepath(self, filepath):
         '''creates a file at filepath, or updates the timestamp on filepath'''
         if os.path.exists(filepath):
@@ -499,65 +502,19 @@ is bob we will attempt to checkout bob-AVR'''
                 for extension in extensions:
                     filepath = "".join([bare_path, extension])
                     if os.path.exists(filepath):
-                        files_to_copy.append((filepath, os.path.basename(filepath)))
+                        files_to_copy.append(filepath)
                 if not os.path.exists(bare_path):
                     raise Exception("No elf file?!")
+                # only copy the elf if we don't have other files to copy
+                if len(files_to_copy) == 0:
+                    files_to_copy.append(bare_path)
 
-                # attempt to run an extract_features.py to create features.txt:
-                features_text = None
-                ef_path = os.path.join(topdir(), "Tools", "scripts", "extract_features.py")
-                if os.path.exists(ef_path):
+                for path in files_to_copy:
                     try:
-                        features_text = self.run_program("EF", [ef_path, bare_path], show_output=False)
+                        self.copyit(path, ddir, tag, vehicle)
                     except Exception as e:
                         self.print_exception_caught(e)
-                        self.progress("Failed to extract features")
-                        pass
-                else:
-                    self.progress("Not extracting features as (%s) does not exist" % (ef_path,))
-
-                # only rename the elf if we have have other files to
-                # copy.  So linux gets "arducopter" and stm32 gets
-                # "arducopter.elf"
-                target_elf_filename = os.path.basename(bare_path)
-                if len(files_to_copy) > 0:
-                    target_elf_filename += ".elf"
-                files_to_copy.append((bare_path, target_elf_filename))
-
-                for (path, target_filename) in files_to_copy:
-                    try:
-                        '''copy path into various places, adding metadata'''
-                        bname = os.path.basename(ddir)
-                        tdir = os.path.join(os.path.dirname(os.path.dirname(
-                            os.path.dirname(ddir))), tag, bname)
-                        if tag == "latest":
-                            # we keep a permanent archive of all
-                            # "latest" builds, their path including a
-                            # build timestamp:
-                            if not os.path.exists(ddir):
-                                self.mkpath(ddir)
-                            self.addfwversion(ddir, vehicle)
-                            features_filepath = os.path.join(ddir, "features.txt",)
-                            if features_text is not None:
-                                self.progress("Writing (%s)" % features_filepath)
-                                self.write_string_to_filepath(features_text, features_filepath)
-                            self.progress("Copying %s to %s" % (path, ddir,))
-                            shutil.copy(path, os.path.join(ddir, target_filename))
-                        # the most recent build of every tag is kept around:
-                        self.progress("Copying %s to %s" % (path, tdir))
-                        if not os.path.exists(tdir):
-                            self.mkpath(tdir)
-                        # must addfwversion even if path already
-                        # exists as we re-use the "beta" directories
-                        self.addfwversion(tdir, vehicle)
-                        features_filepath = os.path.join(tdir, "features.txt")
-                        if features_text is not None:
-                            self.progress("Writing (%s)" % features_filepath)
-                            self.write_string_to_filepath(features_text, features_filepath)
-                        shutil.copy(path, os.path.join(tdir, target_filename))
-                    except Exception as e:
-                        self.print_exception_caught(e)
-                        self.progress("Failed to copy %s to %s: %s" % (path, tdir, str(e)))
+                        self.progress("Failed to copy %s to %s: %s" % (path, ddir, str(e)))
                 # why is touching this important? -pb20170816
                 self.touch_filepath(os.path.join(self.binaries,
                                                  vehicle_binaries_subdir, tag))
@@ -567,7 +524,7 @@ is bob we will attempt to checkout bob-AVR'''
 
         self.checkout(vehicle, "latest")
 
-    def _get_exception_stacktrace(self, e):
+    def get_exception_stacktrace(self, e):
         if sys.version_info[0] >= 3:
             ret = "%s\n" % e
             ret += ''.join(traceback.format_exception(type(e),
@@ -577,12 +534,6 @@ is bob we will attempt to checkout bob-AVR'''
 
         # Python2:
         return traceback.format_exc(e)
-
-    def get_exception_stacktrace(self, e):
-        try:
-            return self._get_exception_stacktrace(e)
-        except Exception:
-            return "FAILED TO GET EXCEPTION STACKTRACE"
 
     def print_exception_caught(self, e, send_statustext=True):
         self.progress("Exception caught: %s" %
@@ -661,10 +612,21 @@ is bob we will attempt to checkout bob-AVR'''
         base_url = 'https://firmware.ardupilot.org'
         generator = generate_manifest.ManifestGenerator(self.binaries,
                                                         base_url)
-        generator.run()
-
-        generator.write_manifest_json(os.path.join(self.binaries, "manifest.json"))
-        generator.write_features_json(os.path.join(self.binaries, "features.json"))
+        content = generator.json()
+        new_json_filepath = os.path.join(self.binaries, "manifest.json.new")
+        self.write_string_to_filepath(content, new_json_filepath)
+        # provide a pre-compressed manifest.  For reference, a 7M manifest
+        # "gzip -9"s to 300k in 1 second, "xz -e"s to 80k in 26 seconds
+        new_json_filepath_gz = os.path.join(self.binaries,
+                                            "manifest.json.gz.new")
+        with gzip.open(new_json_filepath_gz, 'wb') as gf:
+            if running_python3:
+                content = bytes(content, 'ascii')
+            gf.write(content)
+        json_filepath = os.path.join(self.binaries, "manifest.json")
+        json_filepath_gz = os.path.join(self.binaries, "manifest.json.gz")
+        shutil.move(new_json_filepath, json_filepath)
+        shutil.move(new_json_filepath_gz, json_filepath_gz)
         self.progress("Manifest generation successful")
 
         self.progress("Generating stable releases")
@@ -678,6 +640,18 @@ is bob we will attempt to checkout bob-AVR'''
                 raise ValueError("dirty must be only tag if present (%s)" %
                                  (str(self.tags)))
             self.dirty = True
+
+    def pollute_env_from_file(self, filepath):
+        with open(filepath) as f:
+            for line in f:
+                try:
+                    (name, value) = str.split(line, "=")
+                except ValueError as e:
+                    self.progress("%s: split failed: %s" % (filepath, str(e)))
+                    continue
+                value = value.rstrip()
+                self.progress("%s: %s=%s" % (filepath, name, value))
+                os.environ[name] = value
 
     def remove_tmpdir(self):
         if os.path.exists(self.tmpdir):
@@ -731,6 +705,10 @@ is bob we will attempt to checkout bob-AVR'''
         self.basedir = os.getcwd()
         self.error_strings = []
 
+        if os.path.exists("config.mk"):
+            # FIXME: narrow exception
+            self.pollute_env_from_file("config.mk")
+
         if not self.dirty:
             self.run_git_update_submodules()
         self.buildroot = os.path.join(os.environ.get("TMPDIR"),
@@ -767,7 +745,7 @@ if __name__ == '__main__':
     tags = cmd_opts.tags
     if len(tags) == 0:
         # FIXME: wedge this defaulting into parser somehow
-        tags = ["stable", "beta-4.3", "beta", "latest"]
+        tags = ["stable", "beta", "latest"]
 
     bb = build_binaries(tags)
     bb.run()

@@ -16,10 +16,6 @@
   temperature calibration library
  */
 
-#include "AP_TempCalibration_config.h"
-
-#if AP_TEMPCALIBRATION_ENABLED
-
 #include "AP_TempCalibration.h"
 #include <stdio.h>
 #include <AP_Baro/AP_Baro.h>
@@ -235,5 +231,3 @@ void AP_TempCalibration::update(void)
         break;
     }
 }
-
-#endif  // AP_TEMPCALIBRATION_ENABLED

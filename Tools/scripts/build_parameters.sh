@@ -3,10 +3,7 @@
 set -e
 set -x
 
-if [ "x$BUILDLOGS" = "x" ]; then
-    BUILDLOGS="../buildlogs"
-fi
-PARAMS_DIR="$BUILDLOGS/Parameters"
+PARAMS_DIR="../buildlogs/Parameters"
 
 # work from either APM directory or above
 [ -d ArduPlane ] || cd APM

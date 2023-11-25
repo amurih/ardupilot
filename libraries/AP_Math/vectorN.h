@@ -171,6 +171,6 @@ public:
         }
     }
 
-protected:
+private:
     T _v[N];
 };

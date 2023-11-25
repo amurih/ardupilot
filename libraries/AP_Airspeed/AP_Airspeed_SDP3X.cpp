@@ -42,6 +42,11 @@
 
 extern const AP_HAL::HAL &hal;
 
+AP_Airspeed_SDP3X::AP_Airspeed_SDP3X(AP_Airspeed &_frontend, uint8_t _instance) :
+    AP_Airspeed_Backend(_frontend, _instance)
+{
+}
+
 /*
   send a 16 bit command code
  */
@@ -261,7 +266,7 @@ float AP_Airspeed_SDP3X::_correct_pressure(float press)
         flow_SDP3X = 0.0f;
     }
 
-    // differential pressure through pitot tube
+    // diffential pressure through pitot tube
     float dp_pitot = 28557670.0f * (1.0f - 1.0f / (1.0f + (float)powf((flow_SDP3X / 5027611.0f), 1.227924f)));
 
     // uncorrected pressure

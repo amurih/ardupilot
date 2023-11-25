@@ -32,6 +32,7 @@ local WAYPOINT        = 16   -- waypoint command
 local MAV_SEVERITY_WARNING = 4
 local MAV_SEVERITY_INFO    = 6
 local MSG_NORMAL           = 1
+local MSG_DEBUG            = 2
 
 local RC_CHAN = rc:find_channel_for_option(RC_OPTION)
 local last_wp = Location()

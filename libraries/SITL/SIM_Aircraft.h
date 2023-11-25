@@ -37,10 +37,6 @@
 #include <Filter/Filter.h>
 #include "SIM_JSON_Master.h"
 
-#ifndef USE_PICOJSON
-#define USE_PICOJSON (CONFIG_HAL_BOARD == HAL_BOARD_SITL || CONFIG_HAL_BOARD == HAL_BOARD_LINUX)
-#endif
-
 namespace SITL {
 
 /*
@@ -83,8 +79,6 @@ public:
 
     void update_model(const struct sitl_input &input);
 
-    void update_home();
-
     /* fill a sitl_fdm structure from the simulator state */
     void fill_fdm(struct sitl_fdm &fdm);
 
@@ -96,6 +90,16 @@ public:
 
     // get frame rate of model in Hz
     float get_rate_hz(void) const { return rate_hz; }
+
+    // get number of motors for model
+    uint16_t get_num_motors() const {
+        return num_motors;
+    }
+
+    // get motor offset for model
+    virtual uint16_t get_motors_offset() const {
+        return 0;
+    }
 
     const Vector3f &get_gyro(void) const {
         return gyro;
@@ -123,8 +127,6 @@ public:
         config_ = config;
     }
 
-    // return simulation origin:
-    const Location &get_origin() const { return origin; }
 
     const Location &get_location() const { return location; }
 
@@ -145,20 +147,14 @@ public:
     void set_sprayer(Sprayer *_sprayer) { sprayer = _sprayer; }
     void set_parachute(Parachute *_parachute) { parachute = _parachute; }
     void set_richenpower(RichenPower *_richenpower) { richenpower = _richenpower; }
-    void set_adsb(class ADSB *_adsb) { adsb = _adsb; }
     void set_fetteconewireesc(FETtecOneWireESC *_fetteconewireesc) { fetteconewireesc = _fetteconewireesc; }
     void set_ie24(IntelligentEnergy24 *_ie24) { ie24 = _ie24; }
     void set_gripper_servo(Gripper_Servo *_gripper) { gripper = _gripper; }
     void set_gripper_epm(Gripper_EPM *_gripper_epm) { gripper_epm = _gripper_epm; }
     void set_precland(SIM_Precland *_precland);
     void set_i2c(class I2C *_i2c) { i2c = _i2c; }
-#if AP_TEST_DRONECAN_DRIVERS
-    void set_dronecan_device(DroneCANDevice *_dronecan) { dronecan = _dronecan; }
-#endif
-    float get_battery_voltage() const { return battery_voltage; }
-    float get_battery_temperature() const { return battery.get_temperature(); }
 
-    ADSB *adsb;
+    float get_battery_voltage() const { return battery_voltage; }
 
 protected:
     SIM *sitl;
@@ -184,7 +180,7 @@ protected:
     Vector3f accel_body{0.0f, 0.0f, -GRAVITY_MSS}; // m/s/s NED, body frame
     float airspeed;                      // m/s, apparent airspeed
     float airspeed_pitot;                // m/s, apparent airspeed, as seen by fwd pitot tube
-    float battery_voltage = 0.0f;
+    float battery_voltage = -1.0f;
     float battery_current;
     float local_ground_level;            // ground level at local position
     bool lock_step_scheduled;
@@ -193,8 +189,9 @@ protected:
     // battery model
     Battery battery;
 
-    uint32_t motor_mask;
-    float rpm[32];
+    uint8_t num_motors = 1;
+    uint8_t vtol_motor_start;
+    float rpm[12];
     uint8_t rcin_chan_count;
     float rcin[12];
 
@@ -208,7 +205,7 @@ protected:
     } scanner;
 
     // Rangefinder
-    float rangefinder_m[SITL_NUM_RANGEFINDERS];
+    float rangefinder_m[RANGEFINDER_MAX_INSTANCES];
 
     // Windvane apparent wind
     struct {
@@ -232,7 +229,6 @@ protected:
     uint64_t frame_time_us;
     uint64_t last_wall_time_us;
     uint32_t last_fps_report_ms;
-    float achieved_rate_hz;  // achieved speedup rate
     int64_t sleep_debt_us;
     uint32_t last_frame_count;
     uint8_t instance;
@@ -346,9 +342,6 @@ private:
     IntelligentEnergy24 *ie24;
     SIM_Precland *precland;
     class I2C *i2c;
-#if AP_TEST_DRONECAN_DRIVERS
-    DroneCANDevice *dronecan;
-#endif
 };
 
 } // namespace SITL

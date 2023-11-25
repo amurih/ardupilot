@@ -21,10 +21,6 @@
  *
  */
 
-#include "AP_AHRS_config.h"
-
-#if AP_AHRS_DCM_ENABLED
-
 #include "AP_AHRS_Backend.h"
 
 class AP_AHRS_DCM : public AP_AHRS_Backend {
@@ -48,7 +44,8 @@ public:
     }
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_AHRS_DCM);
+    AP_AHRS_DCM(const AP_AHRS_DCM &other) = delete;
+    AP_AHRS_DCM &operator=(const AP_AHRS_DCM&) = delete;
 
     // reset the current gyro drift estimate
     //  should be called if gyro offsets are recalculated
@@ -64,6 +61,9 @@ public:
         return have_initial_yaw;
     }
 
+    // dead-reckoning support
+    virtual bool get_location(struct Location &loc) const override;
+
     // status reporting
     float           get_error_rp() const {
         return _error_rp;
@@ -73,9 +73,8 @@ public:
     }
 
     // return a wind estimation vector, in m/s
-    bool wind_estimate(Vector3f &wind) const override {
-        wind = _wind;
-        return true;
+    Vector3f wind_estimate() const override {
+        return _wind;
     }
 
     // return an airspeed estimate if available. return true
@@ -90,7 +89,7 @@ public:
     // other than an actual airspeed sensor), if available. return
     // true if we have a synthetic airspeed.  ret will not be modified
     // on failure.
-    bool synthetic_airspeed(float &ret) const WARN_IF_UNUSED {
+    bool synthetic_airspeed(float &ret) const override WARN_IF_UNUSED {
         ret = _last_airspeed;
         return true;
     }
@@ -112,7 +111,7 @@ public:
 
     // Get a derivative of the vertical position in m/s which is kinematically consistent with the vertical position is required by some control loops.
     // This is different to the vertical velocity from the EKF which is not always consistent with the vertical position due to the various errors that are being corrected for.
-    bool get_vert_pos_rate_D(float &velocity) const override;
+    bool get_vert_pos_rate(float &velocity) const override;
 
     // returns false if we fail arming checks, in which case the buffer will be populated with a failure message
     // requires_position should be true if horizontal position configuration should be checked (not used)
@@ -124,17 +123,9 @@ public:
     bool get_relative_position_NE_origin(Vector2f &posNE) const override;
     bool get_relative_position_D_origin(float &posD) const override;
 
-    void send_ekf_status_report(class GCS_MAVLINK &link) const override;
-
-    // return true if DCM has a yaw source
-    bool yaw_source_available(void) const;
-
-    void get_control_limits(float &ekfGndSpdLimit, float &controlScaleXY) const override;
+    void send_ekf_status_report(mavlink_channel_t chan) const override;
 
 private:
-
-    // dead-reckoning support
-    bool get_location(Location &loc) const;
 
     // settable parameters
     AP_Float &_kp_yaw;
@@ -153,10 +144,11 @@ private:
     static constexpr float _ki_yaw = 0.01f;
 
     // accelerometer values in the earth frame in m/s/s
-    Vector3f        _accel_ef;
+    Vector3f        _accel_ef[INS_MAX_INSTANCES];
+    Vector3f        _accel_ef_blended;
 
     // Methods
-    void            matrix_update(void);
+    void            matrix_update(float _G_Dt);
     void            normalize(void);
     void            check_matrix(void);
     bool            renorm(Vector3f const &a, Vector3f &result);
@@ -172,7 +164,7 @@ private:
     void            reset(bool recover_eulers);
 
     // airspeed_ret: will always be filled-in by get_unconstrained_airspeed_estimate which fills in airspeed_ret in this order:
-    //               airspeed as filled-in by an enabled airspeed sensor
+    //               airspeed as filled-in by an enabled airsped sensor
     //               if no airspeed sensor: airspeed estimated using the GPS speed & wind_speed_estimation
     //               Or if none of the above, fills-in using the previous airspeed estimate
     // Return false: if we are using the previous airspeed estimate
@@ -287,5 +279,3 @@ private:
     float _sin_yaw;
     float _cos_yaw;
 };
-
-#endif  // AP_AHRS_DCM_ENABLED

@@ -13,13 +13,21 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AP_RPM_config.h"
-
-#if AP_RPM_EFI_ENABLED
+#include <AP_HAL/AP_HAL.h>
 
 #include "RPM_EFI.h"
-#include <AP_HAL/AP_HAL.h>
-#include <AP_EFI/AP_EFI.h>
+
+#if HAL_EFI_ENABLED
+extern const AP_HAL::HAL& hal;
+
+/* 
+   open the sensor in constructor
+*/
+AP_RPM_EFI::AP_RPM_EFI(AP_RPM &_ap_rpm, uint8_t _instance, AP_RPM::RPM_State &_state) :
+    AP_RPM_Backend(_ap_rpm, _instance, _state)
+{
+    instance = _instance;
+}
 
 void AP_RPM_EFI::update(void)
 {
@@ -33,4 +41,4 @@ void AP_RPM_EFI::update(void)
     state.last_reading_ms = AP_HAL::millis();
 }
 
-#endif // AP_RPM_EFI_ENABLED
+#endif // HAL_EFI_ENABLED

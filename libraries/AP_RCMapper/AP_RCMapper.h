@@ -9,7 +9,8 @@ public:
     RCMapper();
 
     /* Do not allow copies */
-    CLASS_NO_COPY(RCMapper);
+    RCMapper(const RCMapper &other) = delete;
+    RCMapper &operator=(const RCMapper&) = delete;
 
     // get singleton instance
     static RCMapper *get_singleton()

@@ -9,7 +9,7 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
 
     // @Param: RAT_RLL_P
     // @DisplayName: Roll axis rate controller P gain
-    // @Description: Roll axis rate controller P gain.  Corrects in proportion to the difference between the desired roll rate vs actual roll rate
+    // @Description: Roll axis rate controller P gain.  Converts the difference between desired roll rate and actual roll rate into a motor speed output
     // @Range: 0.0 0.30
     // @Increment: 0.005
     // @User: Standard
@@ -23,7 +23,7 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
 
     // @Param: RAT_RLL_IMAX
     // @DisplayName: Roll axis rate controller I gain maximum
-    // @Description: Roll axis rate controller I gain maximum.  Constrains the maximum that the I term will output
+    // @Description: Roll axis rate controller I gain maximum.  Constrains the maximum motor output that the I gain will output
     // @Range: 0 1
     // @Increment: 0.01
     // @User: Standard
@@ -73,18 +73,11 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
     // @Increment: 0.5
     // @User: Advanced
 
-    // @Param: RAT_RLL_PDMX
-    // @DisplayName: Roll axis rate controller PD sum maximum
-    // @Description: Roll axis rate controller PD sum maximum.  The maximum/minimum value that the sum of the P and D term can output
-    // @Range: 0 1
-    // @Increment: 0.01
-    // @User: Advanced
-
     AP_SUBGROUPINFO(_pid_rate_roll, "RAT_RLL_", 1, AC_AttitudeControl_Sub, AC_PID),
 
     // @Param: RAT_PIT_P
     // @DisplayName: Pitch axis rate controller P gain
-    // @Description: Pitch axis rate controller P gain.  Corrects in proportion to the difference between the desired pitch rate vs actual pitch rate
+    // @Description: Pitch axis rate controller P gain.  Converts the difference between desired pitch rate and actual pitch rate into a motor speed output
     // @Range: 0.0 0.30
     // @Increment: 0.005
     // @User: Standard
@@ -98,7 +91,7 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
 
     // @Param: RAT_PIT_IMAX
     // @DisplayName: Pitch axis rate controller I gain maximum
-    // @Description: Pitch axis rate controller I gain maximum.  Constrains the maximum that the I term will output
+    // @Description: Pitch axis rate controller I gain maximum.  Constrains the maximum motor output that the I gain will output
     // @Range: 0 1
     // @Increment: 0.01
     // @User: Standard
@@ -148,18 +141,11 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
     // @Increment: 0.5
     // @User: Advanced
 
-    // @Param: RAT_PIT_PDMX
-    // @DisplayName: Pitch axis rate controller PD sum maximum
-    // @Description: Pitch axis rate controller PD sum maximum.  The maximum/minimum value that the sum of the P and D term can output
-    // @Range: 0 1
-    // @Increment: 0.01
-    // @User: Advanced
-
     AP_SUBGROUPINFO(_pid_rate_pitch, "RAT_PIT_", 2, AC_AttitudeControl_Sub, AC_PID),
 
     // @Param: RAT_YAW_P
     // @DisplayName: Yaw axis rate controller P gain
-    // @Description: Yaw axis rate controller P gain.  Corrects in proportion to the difference between the desired yaw rate vs actual yaw rate
+    // @Description: Yaw axis rate controller P gain.  Converts the difference between desired yaw rate and actual yaw rate into a motor speed output
     // @Range: 0.0 0.50
     // @Increment: 0.005
     // @User: Standard
@@ -173,7 +159,7 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
 
     // @Param: RAT_YAW_IMAX
     // @DisplayName: Yaw axis rate controller I gain maximum
-    // @Description: Yaw axis rate controller I gain maximum.  Constrains the maximum that the I term will output
+    // @Description: Yaw axis rate controller I gain maximum.  Constrains the maximum motor output that the I gain will output
     // @Range: 0 1
     // @Increment: 0.01
     // @User: Standard
@@ -221,13 +207,6 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
     // @Description: Sets an upper limit on the slew rate produced by the combined P and D gains. If the amplitude of the control action produced by the rate feedback exceeds this value, then the D+P gain is reduced to respect the limit. This limits the amplitude of high frequency oscillations caused by an excessive gain. The limit should be set to no more than 25% of the actuators maximum slew rate to allow for load effects. Note: The gain will not be reduced to less than 10% of the nominal value. A value of zero will disable this feature.
     // @Range: 0 200
     // @Increment: 0.5
-    // @User: Advanced
-
-    // @Param: RAT_YAW_PDMX
-    // @DisplayName: Yaw axis rate controller PD sum maximum
-    // @Description: Yaw axis rate controller PD sum maximum.  The maximum/minimum value that the sum of the P and D term can output
-    // @Range: 0 1
-    // @Increment: 0.01
     // @User: Advanced
 
     AP_SUBGROUPINFO(_pid_rate_yaw, "RAT_YAW_", 3, AC_AttitudeControl_Sub, AC_PID),
@@ -280,12 +259,12 @@ const AP_Param::GroupInfo AC_AttitudeControl_Sub::var_info[] = {
     AP_GROUPEND
 };
 
-AC_AttitudeControl_Sub::AC_AttitudeControl_Sub(AP_AHRS_View &ahrs, const AP_MultiCopter &aparm, AP_MotorsMulticopter& motors) :
-    AC_AttitudeControl(ahrs, aparm, motors),
+AC_AttitudeControl_Sub::AC_AttitudeControl_Sub(AP_AHRS_View &ahrs, const AP_Vehicle::MultiCopter &aparm, AP_MotorsMulticopter& motors, float dt) :
+    AC_AttitudeControl(ahrs, aparm, motors, dt),
     _motors_multi(motors),
-    _pid_rate_roll(AC_ATC_SUB_RATE_RP_P, AC_ATC_SUB_RATE_RP_I, AC_ATC_SUB_RATE_RP_D, 0.0f, AC_ATC_SUB_RATE_RP_IMAX, AC_ATC_SUB_RATE_RP_FILT_HZ, 0.0f, AC_ATC_SUB_RATE_RP_FILT_HZ),
-    _pid_rate_pitch(AC_ATC_SUB_RATE_RP_P, AC_ATC_SUB_RATE_RP_I, AC_ATC_SUB_RATE_RP_D, 0.0f, AC_ATC_SUB_RATE_RP_IMAX, AC_ATC_SUB_RATE_RP_FILT_HZ, 0.0f, AC_ATC_SUB_RATE_RP_FILT_HZ),
-	_pid_rate_yaw(AC_ATC_SUB_RATE_YAW_P, AC_ATC_SUB_RATE_YAW_I, AC_ATC_SUB_RATE_YAW_D, 0.0f, AC_ATC_SUB_RATE_YAW_IMAX, AC_ATC_SUB_RATE_YAW_FILT_HZ, 0.0f, AC_ATC_SUB_RATE_YAW_FILT_HZ)
+    _pid_rate_roll(AC_ATC_SUB_RATE_RP_P, AC_ATC_SUB_RATE_RP_I, AC_ATC_SUB_RATE_RP_D, 0.0f, AC_ATC_SUB_RATE_RP_IMAX, AC_ATC_SUB_RATE_RP_FILT_HZ, 0.0f, AC_ATC_SUB_RATE_RP_FILT_HZ, dt),
+    _pid_rate_pitch(AC_ATC_SUB_RATE_RP_P, AC_ATC_SUB_RATE_RP_I, AC_ATC_SUB_RATE_RP_D, 0.0f, AC_ATC_SUB_RATE_RP_IMAX, AC_ATC_SUB_RATE_RP_FILT_HZ, 0.0f, AC_ATC_SUB_RATE_RP_FILT_HZ, dt),
+	_pid_rate_yaw(AC_ATC_SUB_RATE_YAW_P, AC_ATC_SUB_RATE_YAW_I, AC_ATC_SUB_RATE_YAW_D, 0.0f, AC_ATC_SUB_RATE_YAW_IMAX, AC_ATC_SUB_RATE_YAW_FILT_HZ, 0.0f, AC_ATC_SUB_RATE_YAW_FILT_HZ, dt)
 {
     AP_Param::setup_object_defaults(this, var_info);
 
@@ -318,6 +297,13 @@ void AC_AttitudeControl_Sub::set_throttle_out(float throttle_in, bool apply_angl
     _throttle_in = throttle_in;
     update_althold_lean_angle_max(throttle_in);
     _motors.set_throttle_filter_cutoff(filter_cutoff);
+    if (apply_angle_boost) {
+        // Apply angle boost
+        throttle_in = get_throttle_boosted(throttle_in);
+    }else{
+        // Clear angle_boost for logging purposes
+        _angle_boost = 0.0f;
+    }
     _motors.set_throttle(throttle_in);
     _motors.set_throttle_avg_max(get_throttle_avg_max(MAX(throttle_in, _throttle_in)));
 }
@@ -370,9 +356,9 @@ void AC_AttitudeControl_Sub::rate_controller_run()
     update_throttle_rpy_mix();
 
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
-    _motors.set_roll(get_rate_roll_pid().update_all(_ang_vel_body.x, gyro_latest.x, _dt, _motors.limit.roll));
-    _motors.set_pitch(get_rate_pitch_pid().update_all(_ang_vel_body.y, gyro_latest.y, _dt, _motors.limit.pitch));
-    _motors.set_yaw(get_rate_yaw_pid().update_all(_ang_vel_body.z, gyro_latest.z, _dt, _motors.limit.yaw));
+    _motors.set_roll(get_rate_roll_pid().update_all(_ang_vel_body.x, gyro_latest.x, _motors.limit.roll));
+    _motors.set_pitch(get_rate_pitch_pid().update_all(_ang_vel_body.y, gyro_latest.y, _motors.limit.pitch));
+    _motors.set_yaw(get_rate_yaw_pid().update_all(_ang_vel_body.z, gyro_latest.z, _motors.limit.yaw));
 
     control_monitor_update();
 }
@@ -397,35 +383,5 @@ void AC_AttitudeControl_Sub::parameter_sanity_check()
     if (_thr_mix_min > _thr_mix_max) {
         _thr_mix_min.set_and_save(AC_ATTITUDE_CONTROL_MIN_DEFAULT);
         _thr_mix_max.set_and_save(AC_ATTITUDE_CONTROL_MAX_DEFAULT);
-    }
-}
-
-// This function ensures that the ROV reaches the target orientation with the desired yaw rate
-void AC_AttitudeControl_Sub::input_euler_angle_roll_pitch_slew_yaw(float euler_roll_angle_cd, float euler_pitch_angle_cd, float euler_yaw_angle_cd, float target_yaw_rate)
-{
-    // Convert from centidegrees on public interface to radians
-    const float euler_yaw_angle = wrap_PI(radians(euler_yaw_angle_cd * 0.01f));
-
-    const float current_yaw = AP::ahrs().get_yaw();
-
-    // Compute angle error
-    const float yaw_error = wrap_PI(euler_yaw_angle - current_yaw);
-    
-    int direction = 0;
-    if (yaw_error < 0){
-        direction = -1;
-    } else {
-        direction = 1;
-    }
-
-    target_yaw_rate *= direction;
-
-
-    if (fabsf(yaw_error) > MAX_YAW_ERROR) {
-        // rotate the rov with desired yaw rate towards the target yaw
-        input_euler_angle_roll_pitch_euler_rate_yaw(euler_roll_angle_cd, euler_pitch_angle_cd, target_yaw_rate);
-    } else {
-        // holds the rov's angles
-        input_euler_angle_roll_pitch_yaw(euler_roll_angle_cd, euler_pitch_angle_cd, euler_yaw_angle_cd, true);
     }
 }

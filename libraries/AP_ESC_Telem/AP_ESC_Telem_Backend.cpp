@@ -31,24 +31,13 @@ AP_ESC_Telem_Backend::AP_ESC_Telem_Backend() {
 }
 
 // callback to update the rpm in the frontend, should be called by the driver when new data is available
-void AP_ESC_Telem_Backend::update_rpm(const uint8_t esc_index, const float new_rpm, const float error_rate) {
+void AP_ESC_Telem_Backend::update_rpm(const uint8_t esc_index, const uint16_t new_rpm, const float error_rate) {
     _frontend->update_rpm(esc_index, new_rpm, error_rate);
 }
 
 // callback to update the data in the frontend, should be called by the driver when new data is available
 void AP_ESC_Telem_Backend::update_telem_data(const uint8_t esc_index, const TelemetryData& new_data, const uint16_t data_present_mask) {
     _frontend->update_telem_data(esc_index, new_data, data_present_mask);
-}
-
-/*
-  return true if the data is stale
- */
-bool AP_ESC_Telem_Backend::TelemetryData::stale(uint32_t now_ms) const volatile
-{
-    if (now_ms == 0) {
-        now_ms = AP_HAL::millis();
-    }
-    return last_update_ms == 0 || now_ms - last_update_ms > ESC_TELEM_DATA_TIMEOUT_MS;
 }
 
 #endif

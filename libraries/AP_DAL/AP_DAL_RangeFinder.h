@@ -4,6 +4,8 @@
 
 #include <AP_Logger/LogStructure.h>
 
+#include <AP_Vehicle/AP_Vehicle_Type.h>
+
 class AP_RangeFinder_Backend;
 
 class AP_DAL_RangeFinder {

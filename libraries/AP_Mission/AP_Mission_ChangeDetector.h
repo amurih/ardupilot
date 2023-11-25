@@ -14,7 +14,7 @@
 
 #include "AP_Mission.h"
 
-#if AP_MISSION_ENABLED
+#if HAL_MISSION_ENABLED
 
 /// @class    AP_Mission_ChangeDetector
 /// @brief    Mission command change detector
@@ -38,4 +38,4 @@ private:
     } mis_change_detect;
 };
 
-#endif // AP_MISSION_ENABLED
+#endif // HAL_MISSION_ENABLED

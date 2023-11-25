@@ -23,7 +23,6 @@
 #include "AP_WindVane_SITL.h"
 #include "AP_WindVane_NMEA.h"
 
-#include <GCS_MAVLink/GCS.h>
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Logger/AP_Logger.h>
@@ -209,12 +208,12 @@ void AP_WindVane::init(const AP_SerialManager& serial_manager)
         case WindVaneType::WINDVANE_ANALOG_PIN:
             _direction_driver = new AP_WindVane_Analog(*this);
             break;
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         case WindVaneType::WINDVANE_SITL_TRUE:
         case WindVaneType::WINDVANE_SITL_APPARENT:
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
             _direction_driver = new AP_WindVane_SITL(*this);
-            break;
 #endif
+            break;
         case WindVaneType::WINDVANE_NMEA:
             _direction_driver = new AP_WindVane_NMEA(*this);
             _direction_driver->init(serial_manager);
@@ -231,17 +230,17 @@ void AP_WindVane::init(const AP_SerialManager& serial_manager)
         case Speed_type::WINDVANE_WIND_SENSOR_REV_P:
             _speed_driver = new AP_WindVane_ModernDevice(*this);
             break;
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         case Speed_type::WINDSPEED_SITL_TRUE:
         case Speed_type::WINDSPEED_SITL_APPARENT:
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
             // single driver does both speed and direction
             if (_direction_type != _speed_sensor_type) {
                 _speed_driver = new AP_WindVane_SITL(*this);
             } else {
                 _speed_driver = _direction_driver;
             }
-            break;
 #endif
+            break;
         case Speed_type::WINDSPEED_NMEA:
             // single driver does both speed and direction
             if (_direction_type != WindVaneType::WINDVANE_NMEA) {
@@ -275,11 +274,11 @@ void AP_WindVane::update()
         } else if (_calibration == 2 && have_speed) {
             _speed_driver->calibrate();
         } else if (_calibration != 0) {
-            GCS_SEND_TEXT(MAV_SEVERITY_INFO, "WindVane: driver not found");
+            gcs().send_text(MAV_SEVERITY_INFO, "WindVane: driver not found");
             _calibration.set_and_save(0);
         }
     } else if (_calibration != 0) {
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "WindVane: disarm for cal");
+        gcs().send_text(MAV_SEVERITY_INFO, "WindVane: disarm for cal");
         _calibration.set_and_save(0);
     }
 
@@ -384,7 +383,7 @@ void AP_WindVane::record_home_heading()
 bool AP_WindVane::start_direction_calibration()
 {
     if (enabled() && (_calibration == 0)) {
-        _calibration.set(1);
+        _calibration = 1;
         return true;
     }
     return false;
@@ -394,7 +393,7 @@ bool AP_WindVane::start_direction_calibration()
 bool AP_WindVane::start_speed_calibration()
 {
     if (enabled() && (_calibration == 0)) {
-        _calibration.set(2);
+        _calibration = 2;
         return true;
     }
     return false;

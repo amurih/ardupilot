@@ -29,7 +29,6 @@
 #include <AP_HAL_Empty/AP_HAL_Empty_Private.h>
 #include <AP_InternalError/AP_InternalError.h>
 #include <AP_Logger/AP_Logger.h>
-#include <AP_RCProtocol/AP_RCProtocol_config.h>
 
 using namespace HALSITL;
 
@@ -38,13 +37,15 @@ HAL_SITL& hal_sitl = (HAL_SITL&)AP_HAL::get_HAL();
 static Storage sitlStorage;
 static SITL_State sitlState;
 static Scheduler sitlScheduler(&sitlState);
-#if AP_RCPROTOCOL_ENABLED
-static RCInput sitlRCInput(&sitlState);
-#else
-static Empty::RCInput  sitlRCInput;
-#endif
+#if !defined(HAL_BUILD_AP_PERIPH)
+static RCInput  sitlRCInput(&sitlState);
 static RCOutput sitlRCOutput(&sitlState);
 static GPIO sitlGPIO(&sitlState);
+#else
+static Empty::RCInput  sitlRCInput;
+static Empty::RCOutput sitlRCOutput;
+static Empty::GPIO sitlGPIO;
+#endif
 static AnalogIn sitlAnalogIn(&sitlState);
 static DSP dspDriver;
 
@@ -64,11 +65,11 @@ static UARTDriver sitlUart7Driver(7, &sitlState);
 static UARTDriver sitlUart8Driver(8, &sitlState);
 static UARTDriver sitlUart9Driver(9, &sitlState);
 
-static I2CDeviceManager i2c_mgr_instance;
-
 #if defined(HAL_BUILD_AP_PERIPH)
+static Empty::I2CDeviceManager i2c_mgr_instance;
 static Empty::SPIDeviceManager spi_mgr_instance;
 #else
+static I2CDeviceManager i2c_mgr_instance;
 static SPIDeviceManager spi_mgr_instance;
 #endif
 static Util utilInstance(&sitlState);
@@ -77,7 +78,7 @@ static Util utilInstance(&sitlState);
 static HALSITL::CANIface* canDrivers[HAL_NUM_CAN_IFACES];
 #endif
 
-static Empty::WSPIDeviceManager wspi_mgr_instance;
+static Empty::QSPIDeviceManager qspi_mgr_instance;
 
 HAL_SITL::HAL_SITL() :
     AP_HAL::HAL(
@@ -93,7 +94,7 @@ HAL_SITL::HAL_SITL() :
         &sitlUart9Driver,   /* uartJ */
         &i2c_mgr_instance,
         &spi_mgr_instance,  /* spi */
-        &wspi_mgr_instance,
+        &qspi_mgr_instance,
         &sitlAnalogIn,      /* analogin */
         &sitlStorage, /* storage */
         &sitlUart0Driver,   /* console */
@@ -192,13 +193,6 @@ uint8_t HAL_SITL::get_instance() const
     return _sitl_state->get_instance();
 }
 
-#if defined(HAL_BUILD_AP_PERIPH)
-bool HAL_SITL::run_in_maintenance_mode() const
-{
-    return _sitl_state->run_in_maintenance_mode();
-}
-#endif
-
 void HAL_SITL::run(int argc, char * const argv[], Callbacks* callbacks) const
 {
     assert(callbacks);
@@ -263,7 +257,7 @@ void HAL_SITL::run(int argc, char * const argv[], Callbacks* callbacks) const
     uint32_t last_watchdog_save = AP_HAL::millis();
     uint8_t fill_count = 0;
 
-    while (true) {
+    while (!HALSITL::Scheduler::_should_reboot) {
         if (HALSITL::Scheduler::_should_exit) {
             ::fprintf(stderr, "Exitting\n");
             exit(0);
@@ -271,7 +265,6 @@ void HAL_SITL::run(int argc, char * const argv[], Callbacks* callbacks) const
         if (fill_count++ % 10 == 0) {
             // only fill every 10 loops. This still gives us a lot of
             // protection, but saves a lot of CPU
-            fill_count = 1u;
             fill_stack_nan();
         }
         callbacks->loop();

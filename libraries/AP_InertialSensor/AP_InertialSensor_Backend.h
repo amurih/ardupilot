@@ -29,10 +29,6 @@
 
 #include "AP_InertialSensor.h"
 
-#ifndef HAL_INS_HIGHRES_SAMPLE
-#define HAL_INS_HIGHRES_SAMPLE 0
-#endif
-
 class AuxiliaryBus;
 class AP_Logger;
 
@@ -126,9 +122,6 @@ public:
         DEVTYPE_INS_IIM42652 = 0x37,
         DEVTYPE_BMI270       = 0x38,
         DEVTYPE_INS_BMI085   = 0x39,
-        DEVTYPE_INS_ICM42670 = 0x3A,
-        DEVTYPE_INS_ICM45686 = 0x3B,
-        DEVTYPE_INS_SCHA63T  = 0x3C,
     };
 
 protected:
@@ -147,9 +140,8 @@ protected:
     // rotate gyro vector, offset and publish
     void _publish_gyro(uint8_t instance, const Vector3f &gyro) __RAMFUNC__; /* front end */
 
-    // apply notch and lowpass gyro filters and sample for FFT
+    // apply notch and lowpass gyro filters
     void apply_gyro_filters(const uint8_t instance, const Vector3f &gyro);
-    void save_gyro_window(const uint8_t instance, const Vector3f &gyro, uint8_t phase);
 
     // this should be called every time a new gyro raw sample is
     // available - be it published or not the sample is raw in the
@@ -242,6 +234,12 @@ protected:
     // publish a temperature value
     void _publish_temperature(uint8_t instance, float temperature); /* front end */
 
+    // set accelerometer error_count
+    void _set_accel_error_count(uint8_t instance, uint32_t error_count);
+
+    // set gyro error_count
+    void _set_gyro_error_count(uint8_t instance, uint32_t error_count);
+
     // increment accelerometer error_count
     void _inc_accel_error_count(uint8_t instance) __RAMFUNC__;
 
@@ -288,17 +286,12 @@ protected:
     }
 
     // should fast sampling be enabled on this IMU?
-    bool enable_fast_sampling(uint8_t instance) const {
+    bool enable_fast_sampling(uint8_t instance) {
         return (_imu._fast_sampling_mask & (1U<<instance)) != 0;
     }
 
-    // should highres sampling be enabled on this IMU?
-    bool enable_highres_sampling(uint8_t instance) const {
-        return (HAL_INS_HIGHRES_SAMPLE & (1U<<instance)) != 0;
-    }
-
     // if fast sampling is enabled, the rate to use in kHz
-    uint8_t get_fast_sampling_rate() const {
+    uint8_t get_fast_sampling_rate() {
         return (1 << uint8_t(_imu._fast_sampling_rate));
     }
 
@@ -324,12 +317,10 @@ private:
 
     bool should_log_imu_raw() const ;
     void log_accel_raw(uint8_t instance, const uint64_t sample_us, const Vector3f &accel) __RAMFUNC__;
-    void log_gyro_raw(uint8_t instance, const uint64_t sample_us, const Vector3f &raw_gyro, const Vector3f &filtered_gyro) __RAMFUNC__;
+    void log_gyro_raw(uint8_t instance, const uint64_t sample_us, const Vector3f &gryo) __RAMFUNC__;
 
     // logging
     void Write_ACC(const uint8_t instance, const uint64_t sample_us, const Vector3f &accel) const __RAMFUNC__; // Write ACC data packet: raw accel data
-
-protected:
-    void Write_GYR(const uint8_t instance, const uint64_t sample_us, const Vector3f &gyro, bool use_sample_timestamp=false) const __RAMFUNC__;  // Write GYR data packet: raw gyro data
+    void Write_GYR(const uint8_t instance, const uint64_t sample_us, const Vector3f &gyro) const __RAMFUNC__;  // Write GYR data packet: raw gyro data
 
 };

@@ -22,7 +22,7 @@
   code to handle sharing of DMA channels between peripherals
  */
 
-#if CH_CFG_USE_MUTEXES == TRUE && AP_HAL_SHARED_DMA_ENABLED
+#if CH_CFG_USE_MUTEXES == TRUE && !defined(HAL_NO_SHARED_DMA)
 
 #include <AP_Common/ExpandingString.h>
 

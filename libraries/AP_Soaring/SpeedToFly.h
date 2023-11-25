@@ -11,10 +11,10 @@ class SpeedToFly {
 
     float _CL_estimate = -1.0f;
 
-    const Variometer::PolarParams &_polarParams;
+    Variometer::PolarParams &_polarParams;
 
 public:
-    SpeedToFly(const Variometer::PolarParams &polarParams) :_polarParams(polarParams) {}
+    SpeedToFly(Variometer::PolarParams &polarParams) :_polarParams(polarParams) {}
 
     void update(float Wx, float Wz, float Wexp, float CLmin, float CLmax);
 

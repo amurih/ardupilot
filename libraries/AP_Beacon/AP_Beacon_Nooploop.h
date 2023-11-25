@@ -2,8 +2,6 @@
 
 #include "AP_Beacon_Backend.h"
 
-#if AP_BEACON_NOOPLOOP_ENABLED
-
 #define NOOPLOOP_MSG_BUF_MAX      256
 
 class AP_Beacon_Nooploop : public AP_Beacon_Backend
@@ -33,7 +31,7 @@ private:
     // send setting_frame0 to tag. tag will ack setting_frame0 with anchor position filled
     void request_setting();
 
-    // parse node_frame2 to get tag position and distance
+    // pase node_frame2 to get tag position and distance
     void parse_node_frame2();
 
     // parse setting_frame0 to get anchor position
@@ -58,5 +56,3 @@ private:
     bool _anchor_pos_avail;                     // flag indicates if we got anchor position or not
     uint32_t _last_request_setting_ms;          // last time we sent request_setting0 packet to tag
 };
-
-#endif  // AP_BEACON_NOOPLOOP_ENABLED

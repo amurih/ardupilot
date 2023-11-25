@@ -18,9 +18,6 @@
  */
 
 #include "AP_RCProtocol_FPort.h"
-
-#if AP_RCPROTOCOL_FPORT_ENABLED
-
 #include <AP_Vehicle/AP_Vehicle_Type.h>
 #include <AP_Frsky_Telem/AP_Frsky_Telem.h>
 #include <RC_Channel/RC_Channel.h>
@@ -103,7 +100,7 @@ void AP_RCProtocol_FPort::decode_control(const FPort_Frame &frame)
 */
 void AP_RCProtocol_FPort::decode_downlink(const FPort_Frame &frame)
 {
-#if !APM_BUILD_TYPE(APM_BUILD_iofirmware) && AP_FRSKY_SPORT_TELEM_ENABLED
+#if !APM_BUILD_TYPE(APM_BUILD_iofirmware)
     switch (frame.downlink.prim) {
         case FPORT_PRIM_DATA:
             // we've seen at least one 0x10 frame
@@ -185,7 +182,7 @@ void AP_RCProtocol_FPort::decode_downlink(const FPort_Frame &frame)
     uint8_t len = 0;
     uint8_t buf2[sizeof(buf)*2+1];
 
-    if (rc().option_is_enabled(RC_Channels::Option::FPORT_PAD)) {
+    if (rc().fport_pad()) {
         // this padding helps on some uarts that have hw pullups
         buf2[len++] = 0xff;
     }
@@ -318,5 +315,3 @@ void AP_RCProtocol_FPort::process_byte(uint8_t b, uint32_t baudrate)
     }
     _process_byte(AP_HAL::micros(), b);
 }
-
-#endif  // AP_RCPROTOCOL_FPORT_ENABLED

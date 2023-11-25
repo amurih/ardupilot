@@ -7,8 +7,6 @@
 OPT    := $(USE_OPT)
 COPT   := $(USE_COPT)
 CPPOPT := $(USE_CPPOPT)
-ASOPT := $(USE_ASOPT)
-ASXOPT := $(USE_ASXOPT)
 
 # Garbage collection
 ifeq ($(USE_LINK_GC),yes)
@@ -119,8 +117,8 @@ LIBS      := $(DLIBS) $(ULIBS)
 # Various settings
 MCFLAGS   := -mcpu=$(MCU)
 ODFLAGS	  = -x --syms
-ASFLAGS   = $(MCFLAGS) $(ADEFS) $(ASOPT)
-ASXFLAGS  = $(MCFLAGS) $(ADEFS) $(ASXOPT)
+ASFLAGS   = $(MCFLAGS) $(ADEFS)
+ASXFLAGS  = $(MCFLAGS) $(ADEFS)
 ifneq ($(USE_FPU),no)
   LIBCC_ASXFLAGS = $(ASXFLAGS) $(USE_FPU_OPT)
 else
@@ -208,7 +206,7 @@ $(OBJDIR):
 $(LSTDIR):
 	@mkdir -p $(LSTDIR)
 
-$(ACPPOBJS) : $(OBJDIR)/%.o : %.cpp $(BUILDROOT)/chibios_flags.h
+$(ACPPOBJS) : $(OBJDIR)/%.o : %.cpp
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CPPC) -c $(CPPFLAGS) $(AOPT) -I. $(IINCDIR) $< -o $@
@@ -217,7 +215,7 @@ else
 	@$(CPPC) -c $(CPPFLAGS) $(AOPT) -I. $(IINCDIR) $< -o $@
 endif
 
-$(TCPPOBJS) : $(OBJDIR)/%.o : %.cpp $(BUILDROOT)/chibios_flags.h
+$(TCPPOBJS) : $(OBJDIR)/%.o : %.cpp
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CPPC) -c $(CPPFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
@@ -226,7 +224,7 @@ else
 	@$(CPPC) -c $(CPPFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
 endif
 
-$(ACOBJS) : $(OBJDIR)/%.o : %.c $(BUILDROOT)/chibios_flags.h
+$(ACOBJS) : $(OBJDIR)/%.o : %.c
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CC) -c $(CFLAGS) $(AOPT) -I. $(IINCDIR) $< -o $@
@@ -235,7 +233,7 @@ else
 	@$(CC) -c $(CFLAGS) $(AOPT) -I. $(IINCDIR) $< -o $@
 endif
 
-$(TCOBJS) : $(OBJDIR)/%.o : %.c $(BUILDROOT)/chibios_flags.h
+$(TCOBJS) : $(OBJDIR)/%.o : %.c
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CC) -c $(CFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
@@ -244,7 +242,7 @@ else
 	@$(CC) -c $(CFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
 endif
 
-$(LIBCC_TCOBJS) : $(OBJDIR)/%.o : %.c $(BUILDROOT)/chibios_flags.h
+$(LIBCC_TCOBJS) : $(OBJDIR)/%.o : %.c
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CC) -c $(CFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
@@ -253,7 +251,7 @@ else
 	@$(CC) -c $(CFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
 endif
 
-$(ASMOBJS) : $(OBJDIR)/%.o : %.s $(BUILDROOT)/chibios_flags.h
+$(ASMOBJS) : $(OBJDIR)/%.o : %.s
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(AS) -c $(ASFLAGS) -I. $(IINCDIR) $< -o $@
@@ -262,7 +260,7 @@ else
 	@$(AS) -c $(ASFLAGS) -I. $(IINCDIR) $< -o $@
 endif
 
-$(ASMXOBJS) : $(OBJDIR)/%.o : %.S $(BUILDROOT)/chibios_flags.h
+$(ASMXOBJS) : $(OBJDIR)/%.o : %.S
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CC) -c $(ASXFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
@@ -271,7 +269,7 @@ else
 	@$(CC) -c $(ASXFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@
 endif
 
-$(LIBCC_ASMXOBJS) : $(OBJDIR)/%.o : %.S $(BUILDROOT)/chibios_flags.h
+$(LIBCC_ASMXOBJS) : $(OBJDIR)/%.o : %.S
 ifeq ($(USE_VERBOSE_COMPILE),yes)
 	@echo
 	$(CC) -c $(LIBCC_ASXFLAGS) $(TOPT) -I. $(IINCDIR) $< -o $@

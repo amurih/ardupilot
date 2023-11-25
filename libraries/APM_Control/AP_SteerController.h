@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AP_Common/AP_Common.h>
+#include <AP_Vehicle/AP_Vehicle.h>
 #include <AC_PID/AP_PIDInfo.h>
 
 class AP_SteerController {
@@ -11,7 +12,8 @@ public:
     }
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_SteerController);
+    AP_SteerController(const AP_SteerController &other) = delete;
+    AP_SteerController &operator=(const AP_SteerController&) = delete;
 
     /*
       return a steering servo output from -4500 to 4500 given a
@@ -47,9 +49,6 @@ public:
     void set_reverse(bool reverse) {
         _reverse = reverse;
     }
-
-    // Returns true if controller has been run recently
-    bool active() const;
 
 private:
     AP_Float _tau;

@@ -16,10 +16,6 @@
  */
 #pragma once
 
-#include "AP_Notify_config.h"
-
-#if AP_NOTIFY_TOSHIBALED_ENABLED
-
 #include <AP_HAL/I2CDevice.h>
 #include "RGBLed.h"
 
@@ -40,5 +36,3 @@ private:
     } rgb;
     uint8_t _bus;
 };
-
-#endif  // AP_NOTIFY_TOSHIBALED_ENABLED

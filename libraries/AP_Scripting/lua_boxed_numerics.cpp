@@ -1,7 +1,3 @@
-#include "AP_Scripting_config.h"
-
-#if AP_SCRIPTING_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 #include "lua_boxed_numerics.h"
 #include <AP_Scripting/lua_generated_bindings.h>
@@ -24,7 +20,7 @@ uint32_t coerce_to_uint32_t(lua_State *L, int arg) {
 
         int success;
         const lua_Integer v = lua_tointegerx(L, arg, &success);
-        if (success) {
+        if (success && v >= 0) {
             return static_cast<uint32_t>(v);
         }
     }
@@ -54,7 +50,12 @@ int lua_new_uint32_t(lua_State *L) {
 
 #define UINT32_T_BOX_OP(name, sym) \
     int uint32_t___##name(lua_State *L) { \
-        binding_argcheck(L, 2); \
+        const int args = lua_gettop(L); \
+        if (args > 2) { \
+            return luaL_argerror(L, args, "too many arguments"); \
+        } else if (args < 2) { \
+            return luaL_argerror(L, args, "too few arguments"); \
+        } \
           \
         uint32_t v1 = coerce_to_uint32_t(L, 1); \
         uint32_t v2 = coerce_to_uint32_t(L, 2); \
@@ -69,6 +70,7 @@ UINT32_T_BOX_OP(sub, -)
 UINT32_T_BOX_OP(mul, *)
 UINT32_T_BOX_OP(div, /)
 UINT32_T_BOX_OP(mod, %)
+UINT32_T_BOX_OP(idiv, /)
 UINT32_T_BOX_OP(band, &)
 UINT32_T_BOX_OP(bor, |)
 UINT32_T_BOX_OP(bxor, ^)
@@ -77,7 +79,13 @@ UINT32_T_BOX_OP(shr, >>)
 
 #define UINT32_T_BOX_OP_BOOL(name, sym) \
     int uint32_t___##name(lua_State *L) { \
-        binding_argcheck(L, 2); \
+        const int args = lua_gettop(L); \
+        luaL_checkstack(L, 1, "Out of stack"); \
+        if (args > 2) { \
+            return luaL_argerror(L, args, "too many arguments"); \
+        } else if (args < 2) { \
+            return luaL_argerror(L, args, "too few arguments"); \
+        } \
           \
         uint32_t v1 = coerce_to_uint32_t(L, 1); \
         uint32_t v2 = coerce_to_uint32_t(L, 2); \
@@ -92,7 +100,11 @@ UINT32_T_BOX_OP_BOOL(le, <=)
 
 #define UINT32_T_BOX_OP_UNARY(name, sym) \
     int uint32_t___##name(lua_State *L) { \
-        binding_argcheck(L, 2); \
+        const int args = lua_gettop(L); \
+        luaL_checkstack(L, 1, "Out of stack"); \
+        if (args != 1) { \
+            return luaL_argerror(L, args, "Expected 1 argument"); \
+        } \
           \
         uint32_t v1 = coerce_to_uint32_t(L, 1); \
           \
@@ -105,7 +117,10 @@ UINT32_T_BOX_OP_BOOL(le, <=)
 UINT32_T_BOX_OP_UNARY(bnot, ~)
 
 int uint32_t_toint(lua_State *L) {
-    binding_argcheck(L, 1);
+    const int args = lua_gettop(L);
+    if (args != 1) {
+        return luaL_argerror(L, args, "Expected 1 argument");
+    }
 
     uint32_t v = *static_cast<uint32_t *>(luaL_checkudata(L, 1, "uint32_t"));
 
@@ -115,7 +130,10 @@ int uint32_t_toint(lua_State *L) {
 }
 
 int uint32_t_tofloat(lua_State *L) {
-    binding_argcheck(L, 1);
+    const int args = lua_gettop(L);
+    if (args != 1) {
+        return luaL_argerror(L, args, "Expected 1 argument");
+    }
 
     uint32_t v = *static_cast<uint32_t *>(luaL_checkudata(L, 1, "uint32_t"));
 
@@ -125,7 +143,10 @@ int uint32_t_tofloat(lua_State *L) {
 }
 
 int uint32_t___tostring(lua_State *L) {
-    binding_argcheck(L, 1);
+    const int args = lua_gettop(L);
+    if (args != 1) {
+        return luaL_argerror(L, args, "Expected 1 argument");
+    }
 
     uint32_t v = *static_cast<uint32_t *>(luaL_checkudata(L, 1, "uint32_t"));
 
@@ -136,5 +157,3 @@ int uint32_t___tostring(lua_State *L) {
 
     return 1;
 }
-
-#endif  // AP_SCRIPTING_ENABLED

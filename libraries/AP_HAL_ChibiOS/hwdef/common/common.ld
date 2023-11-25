@@ -72,7 +72,6 @@ SECTIONS
     {
         /* we want app_descriptor near the start of flash so a false
            positive isn't found by the bootloader (eg. ROMFS) */
-        KEEP(*(.apsec_data));
         KEEP(*(.app_descriptor));
         *(.text)
         *(.text.*)
@@ -202,5 +201,4 @@ SECTIONS
         . = ORIGIN(flash) + LENGTH(flash);
         __crash_log_end__ = .;
     } > flash
-
 }

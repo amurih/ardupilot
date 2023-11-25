@@ -14,11 +14,17 @@
  */
 #pragma once
 
-#include "AP_RangeFinder_config.h"
+#include <AP_BoardConfig/AP_BoardConfig.h>
+
+#include "AP_RangeFinder_Backend.h"
+
+#ifndef AP_RANGEFINDER_SIM_ENABLED
+#define AP_RANGEFINDER_SIM_ENABLED (CONFIG_HAL_BOARD == HAL_BOARD_SITL && AP_RANGEFINDER_BACKEND_DEFAULT_ENABLED)
+#endif
 
 #if AP_RANGEFINDER_SIM_ENABLED
 
-#include "AP_RangeFinder_Backend.h"
+#include <SITL/SITL.h>
 
 class AP_RangeFinder_SITL : public AP_RangeFinder_Backend {
 public:
@@ -33,6 +39,9 @@ protected:
     MAV_DISTANCE_SENSOR _get_mav_distance_sensor_type() const override {
         return MAV_DISTANCE_SENSOR_UNKNOWN;
     }
+
+private:
+    SITL::SIM *sitl;
 
     uint8_t _instance;
 

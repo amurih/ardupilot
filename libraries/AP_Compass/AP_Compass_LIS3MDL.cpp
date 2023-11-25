@@ -19,8 +19,6 @@
  */
 #include "AP_Compass_LIS3MDL.h"
 
-#if AP_COMPASS_LIS3MDL_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 #include <utility>
 #include <AP_Math/AP_Math.h>
@@ -173,5 +171,3 @@ void AP_Compass_LIS3MDL::read()
 {
     drain_accumulated_samples(compass_instance);
 }
-
-#endif  // AP_COMPASS_LIS3MDL_ENABLED

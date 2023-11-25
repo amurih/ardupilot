@@ -17,10 +17,6 @@
 
 #include "AP_Filesystem_backend.h"
 
-#include "AP_Filesystem_config.h"
-
-#if AP_FILESYSTEM_SYS_ENABLED
-
 class ExpandingString;
 
 class AP_Filesystem_Sys : public AP_Filesystem_Backend
@@ -52,5 +48,3 @@ private:
         ExpandingString *str;
     } file[max_open_file];
 };
-
-#endif  // AP_FILESYSTEM_SYS_ENABLED

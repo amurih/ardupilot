@@ -13,7 +13,7 @@
 #if AP_CUSTOMCONTROL_ENABLED
 
 #ifndef CUSTOMCONTROL_MAX_TYPES
-#define CUSTOMCONTROL_MAX_TYPES 2
+#define CUSTOMCONTROL_MAX_TYPES 4
 #endif
 
 class AC_CustomControl_Backend;
@@ -32,7 +32,7 @@ public:
     bool is_safe_to_run(void);
     void log_switch(void);
 
-    // zero index controller type param, only use it to access _backend or _backend_var_info array
+    // zero index controller type param, only use it to acces _backend or _backend_var_info array
     uint8_t get_type() { return _controller_type > 0 ? (_controller_type - 1) : 0; };
 
     // User settable parameters
@@ -45,6 +45,8 @@ protected:
         CONT_NONE            = 0,
         CONT_EMPTY           = 1,
         CONT_PID             = 2,
+        CONT_ALPHA           = 3,
+        CONT_BETA            = 4,
     };            // controller that should be used     
 
     enum class  CustomControlOption {

@@ -19,12 +19,11 @@
 
 #pragma once
 
-#include "AP_MSP_config.h"
+#include <AP_OSD/AP_OSD.h>
+
+#include "AP_MSP_Telem_Backend.h"
 
 #if HAL_MSP_ENABLED
-
-#include <AP_OSD/AP_OSD.h>
-#include "AP_MSP_Telem_Backend.h"
 
 #define MSP_MAX_INSTANCES 3
 #define MSP_OSD_START 2048
@@ -45,7 +44,8 @@ public:
     AP_MSP();
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_MSP);
+    AP_MSP(const AP_MSP &other) = delete;
+    AP_MSP &operator=(const AP_MSP&) = delete;
 
     // User settable parameters
     static const struct AP_Param::GroupInfo var_info[];

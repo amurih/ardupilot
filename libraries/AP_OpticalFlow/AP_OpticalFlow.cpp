@@ -19,38 +19,38 @@ extern const AP_HAL::HAL& hal;
 
 #ifndef OPTICAL_FLOW_TYPE_DEFAULT
  #if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_CHIBIOS_SKYVIPER_F412 || defined(HAL_HAVE_PIXARTFLOW_SPI)
-  #define OPTICAL_FLOW_TYPE_DEFAULT Type::PIXART
+  #define OPTICAL_FLOW_TYPE_DEFAULT OpticalFlowType::PIXART
  #elif CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_BEBOP
-  #define OPTICAL_FLOW_TYPE_DEFAULT Type::BEBOP
+  #define OPTICAL_FLOW_TYPE_DEFAULT OpticalFlowType::BEBOP
  #else
-  #define OPTICAL_FLOW_TYPE_DEFAULT Type::NONE
+  #define OPTICAL_FLOW_TYPE_DEFAULT OpticalFlowType::NONE
  #endif
 #endif
 
-const AP_Param::GroupInfo AP_OpticalFlow::var_info[] = {
+const AP_Param::GroupInfo OpticalFlow::var_info[] = {
     // @Param: _TYPE
     // @DisplayName: Optical flow sensor type
     // @Description: Optical flow sensor type
     // @Values: 0:None, 1:PX4Flow, 2:Pixart, 3:Bebop, 4:CXOF, 5:MAVLink, 6:DroneCAN, 7:MSP, 8:UPFLOW
     // @User: Standard
     // @RebootRequired: True
-    AP_GROUPINFO_FLAGS("_TYPE", 0,  AP_OpticalFlow,    _type,   (float)OPTICAL_FLOW_TYPE_DEFAULT, AP_PARAM_FLAG_ENABLE),
+    AP_GROUPINFO_FLAGS("_TYPE", 0,  OpticalFlow,    _type,   (int8_t)OPTICAL_FLOW_TYPE_DEFAULT, AP_PARAM_FLAG_ENABLE),
 
     // @Param: _FXSCALER
     // @DisplayName: X axis optical flow scale factor correction
     // @Description: This sets the parts per thousand scale factor correction applied to the flow sensor X axis optical rate. It can be used to correct for variations in effective focal length. Each positive increment of 1 increases the scale factor applied to the X axis optical flow reading by 0.1%. Negative values reduce the scale factor.
-    // @Range: -800 +800
+    // @Range: -200 +200
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("_FXSCALER", 1,  AP_OpticalFlow,    _flowScalerX,   0),
+    AP_GROUPINFO("_FXSCALER", 1,  OpticalFlow,    _flowScalerX,   0),
 
     // @Param: _FYSCALER
     // @DisplayName: Y axis optical flow scale factor correction
     // @Description: This sets the parts per thousand scale factor correction applied to the flow sensor Y axis optical rate. It can be used to correct for variations in effective focal length. Each positive increment of 1 increases the scale factor applied to the Y axis optical flow reading by 0.1%. Negative values reduce the scale factor.
-    // @Range: -800 +800
+    // @Range: -200 +200
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("_FYSCALER", 2,  AP_OpticalFlow,    _flowScalerY,   0),
+    AP_GROUPINFO("_FYSCALER", 2,  OpticalFlow,    _flowScalerY,   0),
 
     // @Param: _ORIENT_YAW
     // @DisplayName: Flow sensor yaw alignment
@@ -59,7 +59,7 @@ const AP_Param::GroupInfo AP_OpticalFlow::var_info[] = {
     // @Range: -17999 +18000
     // @Increment: 10
     // @User: Standard
-    AP_GROUPINFO("_ORIENT_YAW", 3,  AP_OpticalFlow,    _yawAngle_cd,   0),
+    AP_GROUPINFO("_ORIENT_YAW", 3,  OpticalFlow,    _yawAngle_cd,   0),
 
     // @Param: _POS_X
     // @DisplayName:  X position offset
@@ -84,53 +84,44 @@ const AP_Param::GroupInfo AP_OpticalFlow::var_info[] = {
     // @Range: -5 5
     // @Increment: 0.01
     // @User: Advanced
-    AP_GROUPINFO("_POS", 4, AP_OpticalFlow, _pos_offset, 0.0f),
+    AP_GROUPINFO("_POS", 4, OpticalFlow, _pos_offset, 0.0f),
 
     // @Param: _ADDR
     // @DisplayName: Address on the bus
     // @Description: This is used to select between multiple possible I2C addresses for some sensor types. For PX4Flow you can choose 0 to 7 for the 8 possible addresses on the I2C bus.
     // @Range: 0 127
     // @User: Advanced
-    AP_GROUPINFO("_ADDR", 5,  AP_OpticalFlow, _address,   0),
-
-    // @Param: _HGT_OVR
-    // @DisplayName: Height override of sensor above ground
-    // @Description: This is used in rover vehicles, where the sensor is a fixed height above the ground
-    // @Units: m
-    // @Range: 0 2
-    // @Increment: 0.01
-    // @User: Advanced
-    AP_GROUPINFO_FRAME("_HGT_OVR", 6,  AP_OpticalFlow, _height_override,   0.0f, AP_PARAM_FRAME_ROVER),
+    AP_GROUPINFO("_ADDR", 5,  OpticalFlow, _address,   0),
 
     AP_GROUPEND
 };
 
 // default constructor
-AP_OpticalFlow::AP_OpticalFlow()
+OpticalFlow::OpticalFlow()
 {
     _singleton = this;
 
     AP_Param::setup_object_defaults(this, var_info);
 }
 
-void AP_OpticalFlow::init(uint32_t log_bit)
+void OpticalFlow::init(uint32_t log_bit)
 {
      _log_bit = log_bit;
 
     // return immediately if not enabled or backend already created
-    if ((_type == Type::NONE) || (backend != nullptr)) {
+    if ((_type == (int8_t)OpticalFlowType::NONE) || (backend != nullptr)) {
         return;
     }
 
-    switch ((Type)_type) {
-    case Type::NONE:
+    switch ((OpticalFlowType)_type.get()) {
+    case OpticalFlowType::NONE:
         break;
-    case Type::PX4FLOW:
+    case OpticalFlowType::PX4FLOW:
 #if AP_OPTICALFLOW_PX4FLOW_ENABLED
         backend = AP_OpticalFlow_PX4Flow::detect(*this);
 #endif
         break;
-    case Type::PIXART:
+    case OpticalFlowType::PIXART:
 #if AP_OPTICALFLOW_PIXART_ENABLED
         backend = AP_OpticalFlow_Pixart::detect("pixartflow", *this);
         if (backend == nullptr) {
@@ -138,38 +129,38 @@ void AP_OpticalFlow::init(uint32_t log_bit)
         }
 #endif
         break;
-    case Type::BEBOP:
+    case OpticalFlowType::BEBOP:
 #if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_BEBOP
         backend = new AP_OpticalFlow_Onboard(*this);
 #endif
         break;
-    case Type::CXOF:
+    case OpticalFlowType::CXOF:
 #if AP_OPTICALFLOW_CXOF_ENABLED
         backend = AP_OpticalFlow_CXOF::detect(*this);
 #endif
         break;
-    case Type::MAVLINK:
+    case OpticalFlowType::MAVLINK:
 #if AP_OPTICALFLOW_MAV_ENABLED
         backend = AP_OpticalFlow_MAV::detect(*this);
 #endif
         break;
-    case Type::UAVCAN:
+    case OpticalFlowType::UAVCAN:
 #if AP_OPTICALFLOW_HEREFLOW_ENABLED
         backend = new AP_OpticalFlow_HereFlow(*this);
 #endif
         break;
-    case Type::MSP:
+    case OpticalFlowType::MSP:
 #if HAL_MSP_OPTICALFLOW_ENABLED
         backend = AP_OpticalFlow_MSP::detect(*this);
 #endif
         break;
-    case Type::UPFLOW:
+    case OpticalFlowType::UPFLOW:
 #if AP_OPTICALFLOW_UPFLOW_ENABLED
         backend = AP_OpticalFlow_UPFLOW::detect(*this);
 #endif
         break;
-    case Type::SITL:
-#if AP_OPTICALFLOW_SITL_ENABLED
+    case OpticalFlowType::SITL:
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         backend = new AP_OpticalFlow_SITL(*this);
 #endif
         break;
@@ -180,7 +171,7 @@ void AP_OpticalFlow::init(uint32_t log_bit)
     }
 }
 
-void AP_OpticalFlow::update(void)
+void OpticalFlow::update(void)
 {
     // exit immediately if not enabled
     if (!enabled()) {
@@ -193,7 +184,6 @@ void AP_OpticalFlow::update(void)
     // only healthy if the data is less than 0.5s old
     _flags.healthy = (AP_HAL::millis() - _last_update_ms < 500);
 
-#if AP_OPTICALFLOW_CALIBRATOR_ENABLED
     // update calibrator and save resulting scaling
     if (_calibrator != nullptr) {
         if (_calibrator->update()) {
@@ -208,10 +198,9 @@ void AP_OpticalFlow::update(void)
             GCS_SEND_TEXT(MAV_SEVERITY_INFO, "FlowCal: FLOW_FXSCALER=%d, FLOW_FYSCALER=%d", (int)_flowScalerX, (int)_flowScalerY);
         }
     }
-#endif
 }
 
-void AP_OpticalFlow::handle_msg(const mavlink_message_t &msg)
+void OpticalFlow::handle_msg(const mavlink_message_t &msg)
 {
     // exit immediately if not enabled
     if (!enabled()) {
@@ -224,7 +213,7 @@ void AP_OpticalFlow::handle_msg(const mavlink_message_t &msg)
 }
 
 #if HAL_MSP_OPTICALFLOW_ENABLED
-void AP_OpticalFlow::handle_msp(const MSP::msp_opflow_data_message_t &pkt)
+void OpticalFlow::handle_msp(const MSP::msp_opflow_data_message_t &pkt)
 {
     // exit immediately if not enabled
     if (!enabled()) {
@@ -237,9 +226,8 @@ void AP_OpticalFlow::handle_msp(const MSP::msp_opflow_data_message_t &pkt)
 }
 #endif //HAL_MSP_OPTICALFLOW_ENABLED
 
-#if AP_OPTICALFLOW_CALIBRATOR_ENABLED
 // start calibration
-void AP_OpticalFlow::start_calibration()
+void OpticalFlow::start_calibration()
 {
     if (_calibrator == nullptr) {
         _calibrator = new AP_OpticalFlow_Calibrator();
@@ -254,15 +242,14 @@ void AP_OpticalFlow::start_calibration()
 }
 
 // stop calibration
-void AP_OpticalFlow::stop_calibration()
+void OpticalFlow::stop_calibration()
 {
     if (_calibrator != nullptr) {
         _calibrator->stop();
     }
 }
-#endif
 
-void AP_OpticalFlow::update_state(const OpticalFlow_state &state)
+void OpticalFlow::update_state(const OpticalFlow_state &state)
 {
     _state = state;
     _last_update_ms = AP_HAL::millis();
@@ -272,15 +259,11 @@ void AP_OpticalFlow::update_state(const OpticalFlow_state &state)
                                 _state.flowRate,
                                 _state.bodyRate,
                                 _last_update_ms,
-                                get_pos_offset(),
-                                get_height_override());
-#if HAL_LOGGING_ENABLED
+                                get_pos_offset());
     Log_Write_Optflow();
-#endif
 }
 
-#if HAL_LOGGING_ENABLED
-void AP_OpticalFlow::Log_Write_Optflow()
+void OpticalFlow::Log_Write_Optflow()
 {
     AP_Logger *logger = AP_Logger::get_singleton();
     if (logger == nullptr) {
@@ -302,17 +285,17 @@ void AP_OpticalFlow::Log_Write_Optflow()
     };
     logger->WriteBlock(&pkt, sizeof(pkt));
 }
-#endif  // HAL_LOGGING_ENABLED
+
 
 
 // singleton instance
-AP_OpticalFlow *AP_OpticalFlow::_singleton;
+OpticalFlow *OpticalFlow::_singleton;
 
 namespace AP {
 
-AP_OpticalFlow *opticalflow()
+OpticalFlow *opticalflow()
 {
-    return AP_OpticalFlow::get_singleton();
+    return OpticalFlow::get_singleton();
 }
 
 }

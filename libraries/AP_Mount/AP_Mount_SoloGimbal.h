@@ -5,6 +5,7 @@
 
 
 #include <AP_HAL/AP_HAL.h>
+#include <AP_AHRS/AP_AHRS.h>
 
 #include "AP_Mount_Backend.h"
 #if HAL_SOLO_GIMBAL_ENABLED
@@ -20,7 +21,7 @@ class AP_Mount_SoloGimbal : public AP_Mount_Backend
 
 public:
     // Constructor
-    AP_Mount_SoloGimbal(AP_Mount &frontend, AP_Mount_Params &params, uint8_t instance);
+    AP_Mount_SoloGimbal(AP_Mount &frontend, AP_Mount::mount_state &state, uint8_t instance);
 
     // init - performs any required initialisation for this instance
     void init() override;
@@ -28,8 +29,14 @@ public:
     // update mount position - should be called periodically
     void update() override;
 
-    // has_pan_control - returns true if this mount can control its pan (required for multicopters)
+    // has_pan_control - returns true if this mount can control it's pan (required for multicopters)
     bool has_pan_control() const override { return false; }
+
+    // set_mode - sets mount's mode
+    void set_mode(enum MAV_MOUNT_MODE mode) override;
+
+    // send_mount_status - called to allow mounts to send their status to GCS using the MOUNT_STATUS message
+    void send_mount_status(mavlink_channel_t chan) override;
 
     // handle a GIMBAL_REPORT message
     void handle_gimbal_report(mavlink_channel_t chan, const mavlink_message_t &msg) override;
@@ -37,14 +44,6 @@ public:
     void handle_param_value(const mavlink_message_t &msg) override;
 
     void update_fast() override;
-
-protected:
-
-    // returns true if heart beat should be suppressed for this gimbal
-    bool suppress_heartbeat() const override { return true; }
-
-    // get attitude as a quaternion.  returns true on success
-    bool get_attitude_quaternion(Quaternion& att_quat) override;
 
 private:
     // internal variables
@@ -54,6 +53,7 @@ private:
     void Log_Write_Gimbal(SoloGimbal &gimbal);
 
     bool _params_saved;
+    MountTarget _angle_rad;         // angle target
     SoloGimbal _gimbal;
 };
 

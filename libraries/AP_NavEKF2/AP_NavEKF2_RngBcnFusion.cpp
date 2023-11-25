@@ -5,7 +5,6 @@
 *                   FUSE MEASURED_DATA                  *
 ********************************************************/
 
-#if AP_BEACON_ENABLED
 // select fusion of range beacon measurements
 void NavEKF2_core::SelectRngBcnFusion()
 {
@@ -571,4 +570,3 @@ void NavEKF2_core::CalcRangeBeaconPosDownOffset(ftype obsVar, Vector3F &vehicleP
 
 }
 
-#endif  // AP_BEACON_ENABLED

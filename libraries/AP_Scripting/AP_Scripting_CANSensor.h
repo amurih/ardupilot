@@ -18,24 +18,14 @@
  
 #pragma once
 
-#include <AP_HAL/AP_HAL.h>
-
-#if defined(HAL_BUILD_AP_PERIPH)
-    // Must have at least two CAN ports on Periph
-    #define AP_SCRIPTING_CAN_SENSOR_ENABLED (HAL_MAX_CAN_PROTOCOL_DRIVERS > 1)
-#else
-    #define AP_SCRIPTING_CAN_SENSOR_ENABLED HAL_MAX_CAN_PROTOCOL_DRIVERS
-#endif
-
-#if AP_SCRIPTING_CAN_SENSOR_ENABLED
-
 #include <AP_CANManager/AP_CANSensor.h>
 
+#if HAL_MAX_CAN_PROTOCOL_DRIVERS
 class ScriptingCANBuffer;
 class ScriptingCANSensor : public CANSensor {
 public:
 
-    ScriptingCANSensor(AP_CAN::Protocol dtype)
+    ScriptingCANSensor(AP_CANManager::Driver_Type dtype)
         : CANSensor("Script") {
         register_driver(dtype);
     }
@@ -86,4 +76,4 @@ private:
 
 };
 
-#endif // AP_SCRIPTING_CAN_SENSOR_ENABLED
+#endif // HAL_MAX_CAN_PROTOCOL_DRIVERS

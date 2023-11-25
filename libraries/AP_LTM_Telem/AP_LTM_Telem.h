@@ -17,7 +17,7 @@
 #include <AP_HAL/AP_HAL.h>
 
 #ifndef AP_LTM_TELEM_ENABLED
-#define AP_LTM_TELEM_ENABLED 1
+#define AP_LTM_TELEM_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 #if AP_LTM_TELEM_ENABLED
@@ -32,7 +32,8 @@ public:
     AP_LTM_Telem() {}
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_LTM_Telem);
+    AP_LTM_Telem(const AP_LTM_Telem &other) = delete;
+    AP_LTM_Telem &operator=(const AP_LTM_Telem&) = delete;
 
     // init - perform required initialisation
     void init();

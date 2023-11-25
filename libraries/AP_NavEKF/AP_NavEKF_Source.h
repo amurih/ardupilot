@@ -12,7 +12,8 @@ public:
     AP_NavEKF_Source();
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_NavEKF_Source);
+    AP_NavEKF_Source(const AP_NavEKF_Source &other) = delete;
+    AP_NavEKF_Source &operator=(const AP_NavEKF_Source&) = delete;
 
     enum class SourceXY : uint8_t {
         NONE = 0,
@@ -55,7 +56,7 @@ public:
 
     // get current position source
     SourceXY getPosXYSource() const { return _source_set[active_source_set].posxy; }
-    SourceZ getPosZSource() const;
+    SourceZ getPosZSource() const { return _source_set[active_source_set].posz; }
 
     // set position, velocity and yaw sources to either 0=primary, 1=secondary, 2=tertiary
     void setPosVelYawSourceSet(uint8_t source_set_idx);
@@ -101,9 +102,6 @@ public:
 
     // return true if wheel encoder is enabled on any source
     bool wheel_encoder_enabled(void) const;
-
-    // returns active source set 
-    uint8_t get_active_source_set() const;
 
     static const struct AP_Param::GroupInfo var_info[];
 

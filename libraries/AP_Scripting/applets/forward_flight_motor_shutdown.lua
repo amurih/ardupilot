@@ -4,8 +4,6 @@
 -- Throttle thresholds also allow automatic enable and disable of stop motors
 -- slew up and down times allow to configure how fast the motors are disabled and re-enabled
 
--- luacheck: only 0
-
 -- Config
 
 -- Motors numbers to stop

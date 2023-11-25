@@ -40,8 +40,6 @@ namespace BuzzerSynth {
 
 using namespace SITL;
 
-#ifdef WITH_SITL_TONEALARM
-
 // table of user settable parameters
 const AP_Param::GroupInfo Buzzer::var_info[] = {
 
@@ -61,6 +59,8 @@ const AP_Param::GroupInfo Buzzer::var_info[] = {
 
     AP_GROUPEND
 };
+
+#ifdef WITH_SITL_TONEALARM
 
 static sf::SoundBuffer xsoundBuffer;
 static sf::Sound xdemoSound;
@@ -125,8 +125,6 @@ void Buzzer::update(const struct sitl_input &input)
 #else
 
 using namespace SITL;
-
-const AP_Param::GroupInfo Buzzer::var_info[] = { AP_GROUPEND };
 
 Buzzer::Buzzer() { };
 

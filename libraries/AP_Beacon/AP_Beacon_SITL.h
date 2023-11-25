@@ -2,7 +2,7 @@
 
 #include "AP_Beacon_Backend.h"
 
-#if AP_BEACON_SITL_ENABLED
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 
 #include <SITL/SITL.h>
 
@@ -25,4 +25,4 @@ private:
     uint32_t last_update_ms;
 };
 
-#endif // AP_BEACON_SITL_ENABLED
+#endif // CONFIG_HAL_BOARD

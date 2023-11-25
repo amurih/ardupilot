@@ -19,17 +19,12 @@
  */
 #pragma once
 
-#include "AP_Compass_config.h"
-
-#if AP_COMPASS_EXTERNALAHRS_ENABLED
-#include <AP_ExternalAHRS/AP_ExternalAHRS.h>
-#endif
-
-#if AP_COMPASS_MSP_ENABLED
 #include <AP_MSP/msp.h>
+#ifndef HAL_MSP_COMPASS_ENABLED
+#define HAL_MSP_COMPASS_ENABLED HAL_MSP_SENSORS_ENABLED
 #endif
 
-#include <AP_Math/AP_Math.h>
+#include "AP_Compass.h"
 
 class Compass;  // forward declaration
 class AP_Compass_Backend
@@ -73,14 +68,13 @@ public:
         DEVTYPE_MMC5983 = 0x13,
         DEVTYPE_AK09918 = 0x14,
         DEVTYPE_AK09915 = 0x15,
-    	DEVTYPE_QMC5883P = 0x16,
     };
 
-#if AP_COMPASS_MSP_ENABLED
+#if HAL_MSP_COMPASS_ENABLED
     virtual void handle_msp(const MSP::msp_compass_data_message_t &pkt) {}
 #endif
 
-#if AP_COMPASS_EXTERNALAHRS_ENABLED
+#if HAL_EXTERNAL_AHRS_ENABLED
     virtual void handle_external(const AP_ExternalAHRS::mag_data_message_t &pkt) {}
 #endif
     
@@ -93,7 +87,7 @@ protected:
      * 2. publish_raw_field - this provides an uncorrected point-sample for
      *      calibration libraries
      * 3. correct_field - this corrects the measurement in-place for hard iron,
-     *      soft iron, motor interference, and non-orthogonality errors
+     *      soft iron, motor interference, and non-orthagonality errors
      * 4. publish_filtered_field - legacy filtered magnetic field
      *
      * All those functions expect the mag field to be in milligauss.

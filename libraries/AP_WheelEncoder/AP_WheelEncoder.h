@@ -35,7 +35,8 @@ public:
     AP_WheelEncoder(void);
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_WheelEncoder);
+    AP_WheelEncoder(const AP_WheelEncoder &other) = delete;
+    AP_WheelEncoder &operator=(const AP_WheelEncoder&) = delete;
 
     // get singleton instance
     static AP_WheelEncoder *get_singleton() {

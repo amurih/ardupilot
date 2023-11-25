@@ -1,10 +1,7 @@
 #pragma once
 
-#include "AP_BattMonitor_Backend.h"
-
-#if AP_BATTERY_SUM_ENABLED
-
 #include "AP_BattMonitor.h"
+#include "AP_BattMonitor_Backend.h"
 
 class AP_BattMonitor_Sum : public AP_BattMonitor_Backend
 {
@@ -32,5 +29,3 @@ private:
     uint8_t _instance;
     bool _has_current;
 };
-
-#endif  // AP_BATTERY_SUM_ENABLED

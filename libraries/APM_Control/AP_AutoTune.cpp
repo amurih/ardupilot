@@ -26,8 +26,6 @@
 #include <AP_Logger/AP_Logger.h>
 #include <AP_Math/AP_Math.h>
 #include <AC_PID/AC_PID.h>
-#include <AP_Scheduler/AP_Scheduler.h>
-#include <GCS_MAVLink/GCS.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -47,7 +45,7 @@ extern const AP_HAL::HAL& hal;
 
 // constructor
 AP_AutoTune::AP_AutoTune(ATGains &_gains, ATType _type,
-                         const AP_FixedWing &parms,
+                         const AP_Vehicle::FixedWing &parms,
                          AC_PID &_rpid) :
     current(_gains),
     rpid(_rpid),
@@ -417,24 +415,12 @@ void AP_AutoTune::update(AP_PIDInfo &pinfo, float scaler, float angle_err_deg)
     rpid.ff().set(FF);
     rpid.kP().set(P);
     rpid.kD().set(D);
-    if (type == AUTOTUNE_ROLL) {  // for roll set I = smaller of FF or P
-        rpid.kI().set(MIN(P, (FF / TRIM_TCONST)));
-    } else {                      // for pitch/yaw naturally damped axes) set I usually = FF to get 1 sec I closure
-        rpid.kI().set(MAX(P*AUTOTUNE_I_RATIO, (FF / TRIM_TCONST)));
-    }
+    rpid.kI().set(MAX(P*AUTOTUNE_I_RATIO, (FF / TRIM_TCONST)));
 
     // setup filters to be suitable for time constant and gyro filter
-    // filtering T can  prevent P/D oscillation being seen, so allow the
-    // user to switch it off
-    if (!has_option(DISABLE_FLTT_UPDATE)) {
-        rpid.filt_T_hz().set(10.0/(current.tau * 2 * M_PI));
-    }
+    rpid.filt_T_hz().set(10.0/(current.tau * 2 * M_PI));
     rpid.filt_E_hz().set(0);
-    // filtering D at the same level as VTOL can allow unwanted oscillations to be seen,
-    // so allow the user to switch it off and select their own (usually lower) value
-    if (!has_option(DISABLE_FLTD_UPDATE)) {
-        rpid.filt_D_hz().set(AP::ins().get_gyro_filter_hz()*0.5);
-    }
+    rpid.filt_D_hz().set(AP::ins().get_gyro_filter_hz()*0.5);
 
     current.FF = FF;
     current.P = P;
@@ -556,7 +542,7 @@ void AP_AutoTune::update_rmax(void)
 
     if (level == 0) {
         // this level means to keep current values of RMAX and TCONST
-        target_rmax = constrain_float(current.rmax_pos, 20, 720);
+        target_rmax = constrain_float(current.rmax_pos, 75, 720);
         target_tau = constrain_float(current.tau, 0.1, 2);
     } else {
         target_rmax = tuning_table[level-1].rmax;

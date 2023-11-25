@@ -1,5 +1,3 @@
 # setup for LEDs on chan9
 SERVO9_FUNCTION 120
-# Default VTX power to on
-RELAY_DEFAULT 1
-
+NTF_LED_TYPES 257

@@ -62,7 +62,6 @@ protected:
 
     uint8_t *buffer;
     uint32_t last_messagewrite_message_sent;
-    uint32_t df_Read_PageAdr;
 
 private:
     /*
@@ -96,7 +95,8 @@ private:
 
     // state variables
     uint16_t df_Read_BufferIdx;
-    uint32_t df_PageAdr;    // current page address for writes
+    uint32_t df_PageAdr;
+    uint32_t df_Read_PageAdr;
     // file numbers
     uint16_t df_FileNumber;
     uint16_t df_Write_FileNumber;

@@ -198,16 +198,8 @@ void AP_Logger_W25N01GV::PageToBuffer(uint32_t pageNum)
     if (pageNum == 0 || pageNum > df_NumPages+1) {
         printf("Invalid page read %u\n", pageNum);
         memset(buffer, 0xFF, df_PageSize);
-        df_Read_PageAdr = pageNum;
         return;
     }
-
-    // we already just read this page
-    if (pageNum == df_Read_PageAdr && read_cache_valid) {
-        return;
-    }
-
-    df_Read_PageAdr = pageNum;
 
     WaitReady();
 
@@ -232,8 +224,6 @@ void AP_Logger_W25N01GV::PageToBuffer(uint32_t pageNum)
         dev->transfer(cmd, 4, nullptr, 0);
         dev->transfer(nullptr, 0, buffer, df_PageSize);
         dev->set_chip_select(false);
-
-        read_cache_valid = true;
     }
 }
 
@@ -242,11 +232,6 @@ void AP_Logger_W25N01GV::BufferToPage(uint32_t pageNum)
     if (pageNum == 0 || pageNum > df_NumPages+1) {
         printf("Invalid page write %u\n", pageNum);
         return;
-    }
-
-    // just wrote the cached page
-    if (pageNum != df_Read_PageAdr) {
-        read_cache_valid = false;
     }
 
     WriteEnable();

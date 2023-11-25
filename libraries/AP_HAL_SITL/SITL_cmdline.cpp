@@ -34,20 +34,14 @@
 #include <SITL/SIM_AirSim.h>
 #include <SITL/SIM_Scrimmage.h>
 #include <SITL/SIM_Webots.h>
-#include <SITL/SIM_Webots_Python.h>
 #include <SITL/SIM_JSON.h>
 #include <SITL/SIM_Blimp.h>
 #include <AP_Filesystem/AP_Filesystem.h>
-
-#include <AP_Vehicle/AP_Vehicle_Type.h>
 
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
-
-#define FORCE_VERSION_H_INCLUDE
-#include "ap_version.h"
 
 extern HAL_SITL& hal;
 
@@ -177,7 +171,6 @@ static const struct {
     { "morse",              Morse::create },
     { "airsim",             AirSim::create},
     { "scrimmage",          Scrimmage::create },
-    { "webots-python",      WebotsPython::create },
     { "webots",             Webots::create },
     { "JSON",               JSON::create },
     { "blimp",              Blimp::create },
@@ -206,13 +199,11 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
 {
     int opt;
     float speedup = 1.0f;
-    float sim_rate_hz = 0;
     _instance = 0;
     _synthetic_clock_mode = false;
     // default to CMAC
     const char *home_str = nullptr;
     const char *model_str = nullptr;
-    const char *vehicle_str = SKETCH;
     _use_fg_view = true;
     char *autotest_dir = nullptr;
     _fg_address = "127.0.0.1";
@@ -344,7 +335,6 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
 #if STORAGE_USE_FRAM
         {"set-storage-fram-enabled", true,   0, CMDLINE_SET_STORAGE_FRAM_ENABLED},
 #endif
-        {"vehicle",           true,   0, 'v'},
         {0, false, 0, 0}
     };
 
@@ -359,7 +349,7 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
     bool storage_fram_enabled = false;
     bool erase_all_storage = false;
 
-    if (asprintf(&autotest_dir, AP_BUILD_ROOT "/Tools/autotest") <= 0) {
+    if (asprintf(&autotest_dir, SKETCHBOOK "/Tools/autotest") <= 0) {
         AP_HAL::panic("out of memory");
     }
     _set_signal_handlers();
@@ -369,7 +359,7 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
 
     bool wiping_storage = false;
 
-    GetOptLong gopt(argc, argv, "hwus:r:CI:P:SO:M:F:c:v:",
+    GetOptLong gopt(argc, argv, "hwus:r:CI:P:SO:M:F:c:",
                     options);
     while (!is_replay && (opt = gopt.getoption()) != -1) {
         switch (opt) {
@@ -384,12 +374,6 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
             temp_cmdline_param = {"SIM_SPEEDUP", speedup};
             cmdline_param.push_back(temp_cmdline_param);
             printf("Setting SIM_SPEEDUP=%f\n", speedup);
-            break;
-        case 'r':
-            sim_rate_hz = strtof(gopt.optarg, nullptr);
-            temp_cmdline_param = {"SIM_RATE_HZ", sim_rate_hz};
-            cmdline_param.push_back(temp_cmdline_param);
-            printf("Setting SIM_RATE_HZ=%f\n", sim_rate_hz);
             break;
         case 'C':
             HALSITL::UARTDriver::_console = true;
@@ -433,9 +417,6 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
             break;
         case 'F':
             _fg_address = gopt.optarg;
-            break;
-        case 'v':
-            vehicle_str = gopt.optarg;
             break;
         case CMDLINE_GIMBAL:
             enable_gimbal = true;
@@ -607,20 +588,20 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
         hal.set_wipe_storage(wiping_storage);
     }
 
-    fprintf(stdout, "Starting sketch '%s'\n", vehicle_str);
+    fprintf(stdout, "Starting sketch '%s'\n", SKETCH);
 
-    if (strcmp(vehicle_str, "ArduCopter") == 0) {
+    if (strcmp(SKETCH, "ArduCopter") == 0) {
         _vehicle = ArduCopter;
-    } else if (strcmp(vehicle_str, "Rover") == 0) {
+    } else if (strcmp(SKETCH, "Rover") == 0) {
         _vehicle = Rover;
         // set right default throttle for rover (allowing for reverse)
         pwm_input[2] = 1500;
-    } else if (strcmp(vehicle_str, "ArduSub") == 0) {
+    } else if (strcmp(SKETCH, "ArduSub") == 0) {
         _vehicle = ArduSub;
         for(uint8_t i = 0; i < 8; i++) {
             pwm_input[i] = 1500;
         }
-    } else if (strcmp(vehicle_str, "Blimp") == 0) {
+    } else if (strcmp(SKETCH, "Blimp") == 0) {
         _vehicle = Blimp;
         for(uint8_t i = 0; i < 8; i++) {
             pwm_input[i] = 1500;

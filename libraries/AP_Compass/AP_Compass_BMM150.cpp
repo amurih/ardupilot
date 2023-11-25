@@ -16,8 +16,6 @@
  */
 #include "AP_Compass_BMM150.h"
 
-#if AP_COMPASS_BMM150_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 
 #include <utility>
@@ -327,5 +325,3 @@ void AP_Compass_BMM150::read()
     drain_accumulated_samples(_compass_instance);
 }
 
-
-#endif  // AP_COMPASS_BMM150_ENABLED

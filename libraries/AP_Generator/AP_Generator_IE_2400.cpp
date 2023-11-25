@@ -15,7 +15,7 @@
 
 #include "AP_Generator_IE_2400.h"
 
-#if AP_GENERATOR_IE_2400_ENABLED
+#if HAL_GENERATOR_ENABLED
 
 #include <AP_Logger/AP_Logger.h>
 
@@ -43,10 +43,10 @@ void AP_Generator_IE_2400::assign_measurements(const uint32_t now)
     _state = (State)_parsed.state;
     _err_code = _parsed.err_code;
 
-    // Scale tank pressure linearly to a value between 0 and 1
+    // Scale tank pressure linearly to a percentage.
     // Min = 5 bar, max = 300 bar, PRESS_GRAD = 1/295.
     const float PRESS_GRAD = 0.003389830508f;
-    _fuel_remaining = constrain_float((_parsed.tank_bar-5)*PRESS_GRAD,0,1);
+    _fuel_remain_pct = constrain_float((_parsed.tank_bar-5)*PRESS_GRAD,0,1);
 
     // Update battery voltage
     _voltage = _parsed.battery_volt;
@@ -182,7 +182,6 @@ bool AP_Generator_IE_2400::check_for_err_code(char* msg_txt, uint8_t msg_len) co
     return true;
 }
 
-#if HAL_LOGGING_ENABLED
 // log generator status to the onboard log
 void AP_Generator_IE_2400::log_write()
 {
@@ -198,12 +197,10 @@ void AP_Generator_IE_2400::log_write()
         "F2---",
         "Qfiii",
         AP_HAL::micros64(),
-        _fuel_remaining,
+        _fuel_remain_pct,
         _spm_pwr,
         _pwr_out,
         _err_code
         );
 }
-#endif  // HAL_LOGGING_ENABLED
-
-#endif  // AP_GENERATOR_IE_2400_ENABLED
+#endif

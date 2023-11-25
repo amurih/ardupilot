@@ -1,9 +1,6 @@
 #include "Util.h"
 #include <sys/time.h>
 #include <AP_Param/AP_Param.h>
-#include "RCOutput.h"
-
-extern const AP_HAL::HAL& hal;
 
 #ifdef WITH_SITL_TONEALARM
 HALSITL::ToneAlarm_SF HALSITL::Util::_toneAlarm;
@@ -75,7 +72,7 @@ bool HALSITL::Util::get_system_id_unformatted(uint8_t buf[], uint8_t &len)
   as get_system_id_unformatted will already be ascii, we use the same
   ID here
  */
-bool HALSITL::Util::get_system_id(char buf[50])
+bool HALSITL::Util::get_system_id(char buf[40])
 {
     uint8_t len = 40;
     return get_system_id_unformatted((uint8_t *)buf, len);
@@ -92,7 +89,7 @@ void *HALSITL::Util::allocate_heap_memory(size_t size)
     return (void *)new_heap;
 }
 
-void *HALSITL::Util::heap_realloc(void *heap_ptr, void *ptr, size_t old_size, size_t new_size)
+void *HALSITL::Util::heap_realloc(void *heap_ptr, void *ptr, size_t new_size)
 {
     if (heap_ptr == nullptr) {
         return nullptr;
@@ -101,16 +98,11 @@ void *HALSITL::Util::heap_realloc(void *heap_ptr, void *ptr, size_t old_size, si
     struct heap *heapp = (struct heap*)heap_ptr;
 
     // extract appropriate headers
-    size_t old_size_header = 0;
+    size_t old_size = 0;
     heap_allocation_header *old_header = nullptr;
     if (ptr != nullptr) {
         old_header = ((heap_allocation_header *)ptr) - 1;
-        old_size_header = old_header->allocation_size;
-#if !defined(HAL_BUILD_AP_PERIPH)
-        if (old_size_header != old_size && new_size != 0) {
-            INTERNAL_ERROR(AP_InternalError::error_t::invalid_arg_or_result);
-        }
-#endif
+        old_size = old_header->allocation_size;
     }
 
     if ((heapp->current_heap_usage + new_size - old_size) > heapp->scripting_max_heap_size) {
@@ -118,7 +110,7 @@ void *HALSITL::Util::heap_realloc(void *heap_ptr, void *ptr, size_t old_size, si
         return nullptr;
     }
 
-    heapp->current_heap_usage -= old_size_header;
+    heapp->current_heap_usage -= old_size;
     if (new_size == 0) {
        free(old_header);
        return nullptr;
@@ -146,12 +138,11 @@ void *HALSITL::Util::heap_realloc(void *heap_ptr, void *ptr, size_t old_size, si
 #if !defined(HAL_BUILD_AP_PERIPH)
 enum AP_HAL::Util::safety_state HALSITL::Util::safety_switch_state(void)
 {
-#define HAL_USE_PWM 1
-#if HAL_USE_PWM
-    return ((RCOutput *)hal.rcout)->_safety_switch_state();
-#else
-    return SAFETY_NONE;
-#endif
+    const SITL::SIM *sitl = AP::sitl();
+    if (sitl == nullptr) {
+        return AP_HAL::Util::SAFETY_NONE;
+    }
+    return sitl->safety_switch_state();
 }
 
 void HALSITL::Util::set_cmdline_parameters()

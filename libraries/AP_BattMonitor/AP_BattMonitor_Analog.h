@@ -1,10 +1,7 @@
 #pragma once
 
-#include "AP_BattMonitor_Backend.h"
-
-#if AP_BATTERY_ANALOG_ENABLED
-
 #include "AP_BattMonitor.h"
+#include "AP_BattMonitor_Backend.h"
 
 // default pins and dividers
 #if defined(HAL_BATT_VOLT_PIN)
@@ -129,5 +126,3 @@ protected:
     AP_Int8  _volt_pin;                 /// board pin used to measure battery voltage
     AP_Int8  _curr_pin;                 /// board pin used to measure battery current
 };
-
-#endif  // AP_BATTERY_ANALOG_ENABLED

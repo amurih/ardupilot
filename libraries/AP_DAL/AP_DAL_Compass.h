@@ -4,6 +4,8 @@
 
 #include <AP_Compass/AP_Compass.h>
 
+#include <AP_Vehicle/AP_Vehicle_Type.h>
+
 class AP_DAL_Compass {
 public:
 

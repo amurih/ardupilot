@@ -100,7 +100,8 @@ bool AP_GPS_SITL::read(void)
     state.velocity.y = speedE;
     state.velocity.z = speedD;
 
-    velocity_to_speed_course(state);
+    state.ground_course = wrap_360(degrees(atan2f(state.velocity.y, state.velocity.x)));
+    state.ground_speed = state.velocity.xy().length();
 
     state.have_speed_accuracy = true;
     state.have_horizontal_accuracy = true;

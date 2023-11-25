@@ -112,12 +112,7 @@ public:
         k_relay_3_momentary     = 106,
         k_relay_4_momentary     = 107,
 
-        k_script_1              = 108,
-        k_script_2              = 109,
-        k_script_3              = 110,
-        k_script_4              = 111,
-
-        // 112+ reserved for future functions
+        // 108+ reserved for future functions
         k_nr_btn_functions         ///< This must be the last enum value (only add new values _before_ this one)
     } button_function_t;
 

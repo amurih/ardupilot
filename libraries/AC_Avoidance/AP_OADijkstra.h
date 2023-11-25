@@ -197,6 +197,6 @@ private:
     uint8_t _log_num_points;
     uint8_t _log_visgraph_version;
 
-    // reference to AP_OAPathPlanner options param
+    // refernce to AP_OAPathPlanner options param
     AP_Int16 &_options;
 };

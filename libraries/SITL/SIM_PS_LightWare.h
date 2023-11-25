@@ -34,7 +34,7 @@ namespace SITL {
 class PS_LightWare : public SerialProximitySensor {
 public:
 
-    using SerialProximitySensor::SerialProximitySensor;
+    PS_LightWare() { }
 
 private:
 

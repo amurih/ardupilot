@@ -10,7 +10,8 @@ public:
     MovingBase(void);
 
     /* Do not allow copies */
-    CLASS_NO_COPY(MovingBase);
+    MovingBase(const MovingBase &other) = delete;
+    MovingBase &operator=(const MovingBase&) = delete;
 
     enum class Type : int8_t {
         RelativeToAlternateInstance = 0,
@@ -18,6 +19,6 @@ public:
     };
 
     AP_Int8 type;            // an option from MovingBaseType
-    AP_Vector3f base_offset; // base position offset from the selected GPS receiver
+    AP_Vector3f base_offset; // base position offset from the selected GPS reciever
 
 };

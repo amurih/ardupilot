@@ -16,7 +16,6 @@
 
 #if AP_BARO_BMP280_ENABLED
 
-#include <AP_Math/definitions.h>
 #include <utility>
 
 extern const AP_HAL::HAL &hal;
@@ -127,7 +126,7 @@ bool AP_Baro_BMP280::_init()
 
 
 
-//  accumulate a new sensor reading
+//  acumulate a new sensor reading
 void AP_Baro_BMP280::_timer(void)
 {
     uint8_t buf[6];

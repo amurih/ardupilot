@@ -25,7 +25,8 @@
 
 #if HAL_ADSB_SAGETECH_MXS_ENABLED
 #include <GCS_MAVLink/GCS.h>
-#include <AP_SerialManager/AP_SerialManager.h>
+#include <AP_AHRS/AP_AHRS.h>
+#include <AP_RTC/AP_RTC.h>
 #include <stdio.h>
 #include <time.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
@@ -77,11 +78,11 @@ void AP_ADSB_Sagetech_MXS::update()
     // -----------------------------
     uint32_t nbytes = MIN(_port->available(), 10 * PAYLOAD_MXS_MAX_SIZE);
     while (nbytes-- > 0) {
-        uint8_t data;
-        if (!_port->read(data)) {
+        const int16_t data = _port->read();
+        if (data < 0) {
             break;
         }
-        parse_byte(data);
+        parse_byte((uint8_t)data);
     }
 
     const uint32_t now_ms = AP_HAL::millis();
@@ -108,7 +109,7 @@ void AP_ADSB_Sagetech_MXS::update()
             }
 
         } else if (last.packet_initialize_ms > MXS_INIT_TIMEOUT && !mxs_state.init_failed) {
-            GCS_SEND_TEXT(MAV_SEVERITY_CRITICAL, "ADSB Sagetech MXS: Initialization Timeout. Failed to initialize.");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "ADSB Sagetech MXS: Initialization Timeout. Failed to initialize.");
             mxs_state.init_failed = true;
         }
 
@@ -311,7 +312,7 @@ void AP_ADSB_Sagetech_MXS::msg_write(const uint8_t *data, const uint16_t len) co
 
 void AP_ADSB_Sagetech_MXS::auto_config_operating()
 {
-    // Configure the Default Operation Message Data
+// Configure the Default Operation Message Data
     mxs_state.op.squawk = AP_ADSB::convert_base_to_decimal(8, _frontend.out_state.cfg.squawk_octal);
     mxs_state.op.opMode = sg_op_mode_t::modeOff;                                      // MXS needs to start in OFF mode to accept installation message
     mxs_state.op.savePowerUp = true;                                                  // Save power-up state in non-volatile
@@ -333,18 +334,16 @@ void AP_ADSB_Sagetech_MXS::auto_config_operating()
 
     mxs_state.op.identOn = false;
 
-    const auto &my_loc = _frontend._my_loc;
-    float vertRateD;
-    if (my_loc.get_vert_pos_rate_D(vertRateD)) {
-        // convert from down to up, and scale appropriately:
-        mxs_state.op.climbRate = -1 * vertRateD * SAGETECH_SCALE_M_PER_SEC_TO_FT_PER_MIN;
+    float vertRate;
+    if (AP::ahrs().get_vert_pos_rate(vertRate)) {
+        mxs_state.op.climbRate = vertRate * SAGETECH_SCALE_M_PER_SEC_TO_FT_PER_MIN;
         mxs_state.op.climbValid = true;
     } else {
         mxs_state.op.climbValid = false;
         mxs_state.op.climbRate = -CLIMB_RATE_LIMIT;
     }
 
-    const Vector2f speed = my_loc.groundspeed_vector();
+    const Vector2f speed = AP::ahrs().groundspeed_vector();
     if (!speed.is_nan() && !speed.is_zero()) {
         mxs_state.op.headingValid = true;
         mxs_state.op.airspdValid = true;
@@ -421,15 +420,15 @@ void AP_ADSB_Sagetech_MXS::auto_config_flightid()
 void AP_ADSB_Sagetech_MXS::handle_ack(const sg_ack_t ack)
 {
     if ((ack.ackId != last.msg.id) || (ack.ackType != last.msg.type)) {
-        // GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: ACK: Message %d of type %02x not acknowledged.", last.msg.id, last.msg.type);
+        // gcs().send_text(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: ACK: Message %d of type %02x not acknowledged.", last.msg.id, last.msg.type);
     }
     // System health
     if (ack.failXpdr && !last.failXpdr) {
-        GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: Transponder Failure");
+        gcs().send_text(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: Transponder Failure");
         _frontend.out_state.tx_status.fault |= UAVIONIX_ADSB_OUT_STATUS_FAULT_TX_SYSTEM_FAIL;
     }
     if (ack.failSystem && !last.failSystem) {
-        GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: System Failure");
+        gcs().send_text(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: System Failure");
         _frontend.out_state.tx_status.fault |= UAVIONIX_ADSB_OUT_STATUS_FAULT_TX_SYSTEM_FAIL;
     }
     last.failXpdr = ack.failXpdr;
@@ -529,7 +528,7 @@ void AP_ADSB_Sagetech_MXS::send_install_msg()
 {
     // MXS must be in OFF mode to change ICAO or Registration
     if (mxs_state.op.opMode != modeOff) {
-        // GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: unable to send installation data while not in OFF mode.");
+        // gcs().send_text(MAV_SEVERITY_WARNING, "ADSB Sagetech MXS: unable to send installation data while not in OFF mode.");
         return;
     }
 
@@ -585,8 +584,6 @@ void AP_ADSB_Sagetech_MXS::send_operating_msg()
     mxs_state.op.squawk = AP_ADSB::convert_base_to_decimal(8, last.operating_squawk);
     mxs_state.op.emergcType = (sg_emergc_t) _frontend.out_state.ctrl.emergencyState;
 
-    const auto &my_loc = _frontend._my_loc;
-
     int32_t height;
     if (_frontend._my_loc.initialised() && _frontend._my_loc.get_alt_cm(Location::AltFrame::ABSOLUTE, height)) {
         mxs_state.op.altitude = height * SAGETECH_SCALE_CM_TO_FEET;         // Height above sealevel in feet
@@ -594,16 +591,16 @@ void AP_ADSB_Sagetech_MXS::send_operating_msg()
         mxs_state.op.altitude = 0;
     }
 
-    float vertRateD;
-    if (my_loc.get_vert_pos_rate_D(vertRateD)) {
-        mxs_state.op.climbRate = -1 * vertRateD * SAGETECH_SCALE_M_PER_SEC_TO_FT_PER_MIN;
+    float vertRate;
+    if (AP::ahrs().get_vert_pos_rate(vertRate)) {
+        mxs_state.op.climbRate = vertRate * SAGETECH_SCALE_M_PER_SEC_TO_FT_PER_MIN;
         mxs_state.op.climbValid = true;
     } else {
         mxs_state.op.climbValid = false;
         mxs_state.op.climbRate = -CLIMB_RATE_LIMIT;
     }
 
-    const Vector2f speed = my_loc.groundspeed_vector();
+    const Vector2f speed = AP::ahrs().groundspeed_vector();
     if (!speed.is_nan() && !speed.is_zero()) {
         mxs_state.op.headingValid = true;
         mxs_state.op.airspdValid = true;
@@ -632,7 +629,7 @@ void AP_ADSB_Sagetech_MXS::send_operating_msg()
 void AP_ADSB_Sagetech_MXS::send_gps_msg()
 {
     sg_gps_t gps {};
-    const AP_ADSB::Loc &ap_gps { _frontend._my_loc };
+    const AP_GPS &ap_gps = AP::gps();
     float hAcc, vAcc, velAcc;
 
     gps.hpl = SAGETECH_HPL_UNKNOWN;                                                     // HPL over 37,040m means unknown
@@ -668,7 +665,7 @@ void AP_ADSB_Sagetech_MXS::send_gps_msg()
     const double lat_minutes = (lat_deg - int(lat_deg)) * 60;
     snprintf((char*)&gps.latitude, 11, "%02u%02u.%05u", (unsigned)lat_deg, (unsigned)lat_minutes, unsigned((lat_minutes - (int)lat_minutes) * 1.0E5));
 
-    const Vector2f speed = _frontend._my_loc.groundspeed_vector();
+    const Vector2f speed = AP::ahrs().groundspeed_vector();
     const float speed_knots = speed.length() * M_PER_SEC_TO_KNOTS;
     snprintf((char*)&gps.grdSpeed, 7, "%03u.%02u", (unsigned)speed_knots, unsigned((speed_knots - (int)speed_knots) * 1.0E2));
 
@@ -679,10 +676,10 @@ void AP_ADSB_Sagetech_MXS::send_gps_msg()
     gps.latNorth = (latitude >= 0 ? true: false);
     gps.lngEast = (longitude >= 0 ? true: false);
 
-    gps.gpsValid = ap_gps.status() >=  AP_GPS_FixType::FIX_2D;
+    gps.gpsValid = (AP::gps().status() < AP_GPS::GPS_OK_FIX_2D) ? false : true;  // If the status is not OK, gpsValid is false.
 
-    uint64_t time_usec = ap_gps.epoch_from_rtc_us;
-    if (ap_gps.have_epoch_from_rtc_us) {
+    uint64_t time_usec;
+    if (AP::rtc().get_utc_usec(time_usec)) {
         const time_t time_sec = time_usec * 1E-6;
         struct tm* tm = gmtime(&time_sec);
 

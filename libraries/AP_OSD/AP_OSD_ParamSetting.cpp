@@ -23,7 +23,6 @@
 
 #include "AP_OSD.h"
 #include <AP_Vehicle/AP_Vehicle_Type.h>
-#include <GCS_MAVLink/GCS.h>
 #include <SRV_Channel/SRV_Channel.h>
 #include <ctype.h>
 
@@ -35,21 +34,21 @@ const AP_Param::GroupInfo AP_OSD_ParamSetting::var_info[] = {
     // @Description: Enable setting
     // @Values: 0:Disabled,1:Enabled
     // @User: Standard
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("_EN", 1, AP_OSD_ParamSetting, enabled, default_enabled),
+    AP_GROUPINFO("_EN", 1, AP_OSD_ParamSetting, enabled, 0),
 
     // @Param: _X
     // @DisplayName: X position
     // @Description: Horizontal position on screen
     // @Range: 0 29
     // @User: Standard
-    AP_GROUPINFO("_X", 2, AP_OSD_ParamSetting, xpos, 2),
+    AP_GROUPINFO("_X", 2, AP_OSD_ParamSetting, xpos, 0),
 
     // @Param: _Y
     // @DisplayName: Y position
     // @Description: Vertical position on screen
     // @Range: 0 15
     // @User: Standard
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("_Y", 3, AP_OSD_ParamSetting, ypos, default_ypos),
+    AP_GROUPINFO("_Y", 3, AP_OSD_ParamSetting, ypos, 0),
 
     // Parameter access keys. These default to -1 too allow user overrides
     // to work properly
@@ -58,19 +57,19 @@ const AP_Param::GroupInfo AP_OSD_ParamSetting::var_info[] = {
     // @DisplayName: Parameter key
     // @Description: Key of the parameter to be displayed and modified
     // @User: Standard
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("_KEY", 4, AP_OSD_ParamSetting, _param_key, default_param_key),
+    AP_GROUPINFO("_KEY", 4, AP_OSD_ParamSetting, _param_key, -1),
 
     // @Param: _IDX
     // @DisplayName: Parameter index
     // @Description: Index of the parameter to be displayed and modified
     // @User: Standard
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("_IDX", 5, AP_OSD_ParamSetting, _param_idx, default_param_idx),
+    AP_GROUPINFO("_IDX", 5, AP_OSD_ParamSetting, _param_idx, -1),
 
     // @Param: _GRP
     // @DisplayName: Parameter group
     // @Description: Group of the parameter to be displayed and modified
     // @User: Standard
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("_GRP", 6, AP_OSD_ParamSetting, _param_group, default_param_group),
+    AP_GROUPINFO("_GRP", 6, AP_OSD_ParamSetting, _param_group, -1),
 
     // @Param: _MIN
     // @DisplayName: Parameter minimum
@@ -94,7 +93,7 @@ const AP_Param::GroupInfo AP_OSD_ParamSetting::var_info[] = {
     // @DisplayName: Parameter type
     // @Description: Type of the parameter to be displayed and modified
     // @User: Standard
-    AP_GROUPINFO_FLAGS_DEFAULT_POINTER("_TYPE", 10, AP_OSD_ParamSetting, _type, default_type),
+    AP_GROUPINFO("_TYPE", 10, AP_OSD_ParamSetting, _type, 0),
 
     AP_GROUPEND
 };
@@ -116,10 +115,8 @@ static const char* SERIAL_PROTOCOL_VALUES[] = {
     "", "MAV", "MAV2", "FSKY_D", "FSKY_S", "GPS", "", "ALEX", "STORM", "RNG", 
     "FSKY_TX", "LID360", "", "BEACN", "VOLZ", "SBUS", "ESC_TLM", "DEV_TLM", "OPTFLW", "RBTSRV",
     "NMEA", "WNDVNE", "SLCAN", "RCIN", "MGSQRT", "LTM", "RUNCAM", "HOT_TLM", "SCRIPT", "CRSF",
-    "GEN", "WNCH", "MSP", "DJI", "AIRSPD", "ADSB", "AHRS", "AUDIO", "FETTEC", "TORQ",
-    "AIS", "CD_ESC", "MSP_DP", "MAV_HL", "TRAMP", "DDS"
+    "GEN", "WNCH", "MSP", "DJI"
 };
-static_assert(AP_SerialManager::SerialProtocol_NumProtocols == ARRAY_SIZE(SERIAL_PROTOCOL_VALUES), "Wrong size SerialProtocol_NumProtocols");
 
 static const char* SERVO_FUNCTIONS[] = {
     "NONE", "RCPASS", "FLAP", "FLAP_AUTO", "AIL", "", "MNT_PAN", "MNT_TLT", "MNT_RLL", "MNT_OPEN", 
@@ -238,28 +235,38 @@ const AP_OSD_ParamSetting::ParamMetadata AP_OSD_ParamSetting::_param_metadata[OS
 
 extern const AP_HAL::HAL& hal;
 
-// default constructor that just sets some sensible defaults that exist on all platforms
-AP_OSD_ParamSetting::AP_OSD_ParamSetting(uint8_t param_number) :
-    _param_number(param_number),
-    default_ypos(param_number + 1),
-    default_param_group(-1),
-    default_param_idx(-1),
-    default_param_key(-1)
+// constructor
+AP_OSD_ParamSetting::AP_OSD_ParamSetting(uint8_t param_number, bool _enabled, uint8_t x, uint8_t y,  int16_t key, int8_t idx, int32_t group, int8_t type, float min, float max, float incr)
+    : AP_OSD_Setting(_enabled, x, y), _param_number(param_number)
 {
-    AP_Param::setup_object_defaults(this, var_info);
+    _param_group = group;
+    _param_idx = idx;
+    _param_key = key;
+    _param_min = min;
+    _param_max = max;
+    _param_incr = incr;
+    _type = type;
+}
+
+// default constructor that just sets some sensible defaults that exist on all platforms
+AP_OSD_ParamSetting::AP_OSD_ParamSetting(uint8_t param_number)
+    : AP_OSD_Setting(false, 2, param_number + 1), _param_number(param_number)
+{
+    _param_min = 0.0f;
+    _param_max = 1.0f;
+    _param_incr = 0.001f;
+    _type = OSD_PARAM_NONE;
 }
 
 // construct a setting from a compact static initializer structure
-AP_OSD_ParamSetting::AP_OSD_ParamSetting(const Initializer& initializer) :
-    _param_number(initializer.index),
-    default_enabled(true),
-    default_ypos(initializer.index + 1),
-    default_param_group(initializer.token.group_element),
-    default_param_idx(initializer.token.idx),
-    default_param_key(initializer.token.key),
-    default_type(initializer.type)
+AP_OSD_ParamSetting::AP_OSD_ParamSetting(const Initializer& initializer)
+    : AP_OSD_ParamSetting(initializer.index)
 {
-    AP_Param::setup_object_defaults(this, var_info);
+    _param_group = initializer.token.group_element;
+    _param_idx = initializer.token.idx;
+    _param_key = initializer.token.key;
+    _type = initializer.type;
+    enabled = true;
 }
 
 // update the contained parameter
@@ -280,7 +287,7 @@ void AP_OSD_ParamSetting::update()
     }
 
     if (_param == nullptr) {
-        enabled.set(false);
+        enabled = false;
     } else {
         guess_ranges();
     }
@@ -399,13 +406,13 @@ void AP_OSD_ParamSetting::guess_ranges(bool force)
         }
 
         if (force || !_param_min.configured()) {
-            _param_min.set(min);
+            _param_min = min;
         }
         if (force || !_param_max.configured()) {
-            _param_max.set(max);
+            _param_max = max;
         }
         if (force || !_param_incr.configured()) {
-            _param_incr.set(incr);
+            _param_incr = incr;
         }
     }
 }
@@ -431,9 +438,9 @@ bool AP_OSD_ParamSetting::set_from_metadata()
 {
     // check for statically configured setting metadata
     if (_type > 0 && _type < OSD_PARAM_NUM_TYPES && _param_metadata[_type - 1].values_max > 0) {
-        _param_incr.set(_param_metadata[_type - 1].increment);
-        _param_min.set(_param_metadata[_type - 1].min_value);
-        _param_max.set(_param_metadata[_type - 1].max_value);
+        _param_incr = _param_metadata[_type - 1].increment;
+        _param_min = _param_metadata[_type - 1].min_value;
+        _param_max = _param_metadata[_type - 1].max_value;
         return true;
     }
     return false;

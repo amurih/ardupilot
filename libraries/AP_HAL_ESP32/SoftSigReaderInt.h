@@ -41,9 +41,9 @@ class SoftSigReaderInt
 public:
     SoftSigReaderInt();
     ~SoftSigReaderInt();
-
     /* Do not allow copies */
-    CLASS_NO_COPY(SoftSigReaderInt);
+    SoftSigReaderInt(const SoftSigReaderInt &other) = delete;
+    SoftSigReaderInt &operator=(const SoftSigReaderInt&) = delete;
 
     // get singleton
     static SoftSigReaderInt *get_instance(void)

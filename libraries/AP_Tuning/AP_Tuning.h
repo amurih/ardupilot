@@ -1,9 +1,5 @@
 #pragma once
 
-#include "AP_Tuning_config.h"
-
-#if AP_TUNING_ENABLED
-
 #include <AP_Param/AP_Param.h>
 
 #include "stdint.h"
@@ -104,5 +100,3 @@ protected:
     // parmset is in vehicle subclass var table
     AP_Int16 parmset;
 };
-
-#endif  // AP_TUNING_ENABLED

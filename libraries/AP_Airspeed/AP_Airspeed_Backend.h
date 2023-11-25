@@ -18,15 +18,10 @@
   backend driver class for airspeed
  */
 
-#include "AP_Airspeed_config.h"
-
-#if AP_AIRSPEED_ENABLED
-
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL_Boards.h>
 #include <AP_HAL/Semaphores.h>
 #include "AP_Airspeed.h"
-#include <AP_MSP/msp_sensors.h>
 
 class AP_Airspeed_Backend {
 public:
@@ -42,18 +37,13 @@ public:
     // return the current temperature in degrees C, if available
     virtual bool get_temperature(float &temperature) = 0;
 
-    // true if sensor reads airspeed directly, not via pressure
+    // true if sensor reads airspeed directly, not via pressue
     virtual bool has_airspeed() {return false;}
 
     // return airspeed in m/s if available
     virtual bool get_airspeed(float& airspeed) {return false;}
 
     virtual void handle_msp(const MSP::msp_airspeed_data_message_t &pkt) {}
-
-#if AP_AIRSPEED_HYGROMETER_ENABLE
-    // optional hygrometer support
-    virtual bool get_hygrometer(uint32_t &last_sample_ms, float &temperature, float &humidity) { return false; }
-#endif
 
 protected:
     int8_t get_pin(void) const;
@@ -70,11 +60,7 @@ protected:
     }
 
     AP_Airspeed::pitot_tube_order get_tube_order(void) const {
-#ifndef HAL_BUILD_AP_PERIPH
         return AP_Airspeed::pitot_tube_order(frontend.param[instance].tube_order.get());
-#else
-        return AP_Airspeed::pitot_tube_order::PITOT_TUBE_ORDER_AUTO;
-#endif
     }
 
     // semaphore for access to shared frontend data
@@ -91,27 +77,23 @@ protected:
 
     // set to no zero cal, which makes sense for some sensors
     void set_skip_cal(void) {
-#ifndef HAL_BUILD_AP_PERIPH
         frontend.param[instance].skip_cal.set(1);
-#endif
     }
 
     // set zero offset
     void set_offset(float ofs) {
-#ifndef HAL_BUILD_AP_PERIPH
         frontend.param[instance].offset.set(ofs);
-#endif
     }
 
     // set use
     void set_use(int8_t use) {
-#ifndef HAL_BUILD_AP_PERIPH
         frontend.param[instance].use.set(use);
-#endif
     }
 
     // set bus ID of this instance, for ARSPD_DEVID parameters
-    void set_bus_id(uint32_t id);
+    void set_bus_id(uint32_t id) {
+        frontend.param[instance].bus_id.set(int32_t(id));
+    }
 
     enum class DevType {
         SITL     = 0x01,
@@ -130,5 +112,3 @@ private:
     AP_Airspeed &frontend;
     uint8_t instance;
 };
-
-#endif  // AP_AIRSPEED_ENABLED

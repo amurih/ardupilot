@@ -20,9 +20,6 @@
 
 #include "AC_AutoTune.h"
 #include <AP_Math/chirp.h>
-#include <GCS_MAVLink/GCS.h>
-
-#include <AP_Scheduler/AP_Scheduler.h>
 
 class AC_AutoTune_Heli : public AC_AutoTune
 {
@@ -60,7 +57,7 @@ protected:
     // load test gains
     void load_test_gains() override;
 
-    // reset the test variables for heli
+    // reset the test vaariables for heli
     void reset_vehicle_test_variables() override;
 
     // reset the update gain variables for heli
@@ -111,7 +108,7 @@ protected:
     void Log_AutoTuneSweep() override;
     void Log_Write_AutoTuneSweep(float freq, float gain, float phase);
 
-    // send intermittent updates to user on status of tune
+    // send intermittant updates to user on status of tune
     void do_gcs_announcements() override;
 
     // send post test updates to user
@@ -147,7 +144,6 @@ private:
     enum DwellType {
         RATE    = 0,
         ANGLE   = 1,
-        DRB     = 2,
     };
 
     // Feedforward test used to determine Rate FF gain
@@ -161,7 +157,7 @@ private:
     void dwell_test_run(uint8_t freq_resp_input, float start_frq, float stop_frq, float &dwell_gain, float &dwell_phase, DwellType dwell_type);
 
     // updating_rate_ff_up - adjust FF to ensure the target is reached
-    // FF is adjusted until rate requested is achieved
+    // FF is adjusted until rate requested is acheived
     void updating_rate_ff_up(float &tune_ff, float rate_target, float meas_rate, float meas_command);
 
     // updating_rate_p_up - uses maximum allowable gain determined from max_gain test to determine rate p gain that does not exceed exceed max response gain
@@ -185,7 +181,7 @@ private:
     // exceeded_freq_range - ensures tuning remains inside frequency range
     bool exceeded_freq_range(float frequency);
 
-    // report gain formatting helper
+    // report gain formating helper
     void report_axis_gains(const char* axis_string, float rate_P, float rate_I, float rate_D, float rate_ff, float angle_P, float max_accel) const;
 
     // updating rate FF variables
@@ -243,6 +239,7 @@ private:
     Vector3f start_angles;                          // aircraft attitude at the start of test
     uint32_t settle_time;                           // time in ms for allowing aircraft to stabilize before initiating test
     uint32_t phase_out_time;                        // time in ms to phase out response
+    float    waveform_freq_rads;                    //current frequency for chirp waveform
     float    trim_pff_out;                          // trim output of the PID rate controller for P, I and FF terms
     float    trim_meas_rate;                        // trim measured gyro rate
 

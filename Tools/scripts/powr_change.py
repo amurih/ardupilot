@@ -28,9 +28,7 @@ class POWRChange(object):
         if 1 << bit_number not in mavutil.mavlink.enums["MAV_POWER_STATUS"]:
             return "UNKNOWN_BIT[%u]" % bit_number
 
-        name = mavutil.mavlink.enums["MAV_POWER_STATUS"][1 << bit_number].name
-        # return name with common prefix removed:
-        return name[len("MAV_POWER_STATUS_"):]
+        return mavutil.mavlink.enums["MAV_POWER_STATUS"][1 << bit_number].name
 
     def run(self):
 

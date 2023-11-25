@@ -18,7 +18,8 @@ public:
     AP_OAPathPlanner();
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_OAPathPlanner);
+    AP_OAPathPlanner(const AP_OAPathPlanner &other) = delete;
+    AP_OAPathPlanner &operator=(const AP_OAPathPlanner&) = delete;
 
     // get singleton instance
     static AP_OAPathPlanner *get_singleton() {

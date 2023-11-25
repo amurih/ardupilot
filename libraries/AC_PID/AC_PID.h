@@ -21,44 +21,20 @@
 class AC_PID {
 public:
 
-    struct Defaults {
-        float p;
-        float i;
-        float d;
-        float ff;
-        float imax;
-        float filt_T_hz;
-        float filt_E_hz;
-        float filt_D_hz;
-        float srmax;
-        float srtau;
-    };
-
     // Constructor for PID
     AC_PID(float initial_p, float initial_i, float initial_d, float initial_ff, float initial_imax, float initial_filt_T_hz, float initial_filt_E_hz, float initial_filt_D_hz,
-           float initial_srmax=0, float initial_srtau=1.0);
-    AC_PID(const AC_PID::Defaults &defaults) :
-        AC_PID(
-            defaults.p,
-            defaults.i,
-            defaults.d,
-            defaults.ff,
-            defaults.imax,
-            defaults.filt_T_hz,
-            defaults.filt_E_hz,
-            defaults.filt_D_hz,
-            defaults.srmax,
-            defaults.srtau
-            )
-        { }
+           float dt, float initial_srmax=0, float initial_srtau=1.0);
 
     CLASS_NO_COPY(AC_PID);
+
+    // set_dt - set time step in seconds
+    void set_dt(float dt);
 
     //  update_all - set target and measured inputs to PID controller and calculate outputs
     //  target and error are filtered
     //  the derivative is then calculated and filtered
     //  the integral is then updated based on the setting of the limit flag
-    float update_all(float target, float measurement, float dt, bool limit = false, float boost = 1.0f);
+    float update_all(float target, float measurement, bool limit = false);
 
     //  update_error - set error input to PID controller and calculate outputs
     //  target is set to zero and error is set and filtered
@@ -66,11 +42,11 @@ public:
     //  the integral is then updated based on the setting of the limit flag
     //  Target and Measured must be set manually for logging purposes.
     // todo: remove function when it is no longer used.
-    float update_error(float error, float dt, bool limit = false);
+    float update_error(float error, bool limit = false);
 
     //  update_i - update the integral
     //  if the limit flag is set the integral is only allowed to shrink
-    void update_i(float dt, bool limit);
+    void update_i(bool limit);
 
     // get_pid - get results from pid controller
     float get_pid() const;
@@ -95,15 +71,13 @@ public:
     void save_gains();
 
     /// operator function call for easy initialisation
-    void operator()(float p_val, float i_val, float d_val, float ff_val, float imax_val, float input_filt_T_hz, float input_filt_E_hz, float input_filt_D_hz);
+    void operator()(float p_val, float i_val, float d_val, float ff_val, float imax_val, float input_filt_T_hz, float input_filt_E_hz, float input_filt_D_hz, float dt);
 
     // get accessors
-    const AP_Float &kP() const { return _kp; }
     AP_Float &kP() { return _kp; }
     AP_Float &kI() { return _ki; }
     AP_Float &kD() { return _kd; }
     AP_Float &kIMAX() { return _kimax; }
-    AP_Float &kPDMAX() { return _kpdmax; }
     AP_Float &ff() { return _kff;}
     AP_Float &filt_T_hz() { return _filt_T_hz; }
     AP_Float &filt_E_hz() { return _filt_E_hz; }
@@ -111,10 +85,10 @@ public:
     AP_Float &slew_limit() { return _slew_rate_max; }
 
     float imax() const { return _kimax.get(); }
-    float pdmax() const { return _kpdmax.get(); }
-    float get_filt_T_alpha(float dt) const;
-    float get_filt_E_alpha(float dt) const;
-    float get_filt_D_alpha(float dt) const;
+    float get_filt_alpha(float filt_hz) const;
+    float get_filt_T_alpha() const;
+    float get_filt_E_alpha() const;
+    float get_filt_D_alpha() const;
 
     // set accessors
     void kP(const float v) { _kp.set(v); }
@@ -122,7 +96,6 @@ public:
     void kD(const float v) { _kd.set(v); }
     void ff(const float v) { _kff.set(v); }
     void imax(const float v) { _kimax.set(fabsf(v)); }
-    void pdmax(const float v) { _kpdmax.set(fabsf(v)); }
     void filt_T_hz(const float v);
     void filt_E_hz(const float v);
     void filt_D_hz(const float v);
@@ -136,7 +109,7 @@ public:
     void set_integrator(float target, float measurement, float i);
     void set_integrator(float error, float i);
     void set_integrator(float i);
-    void relax_integrator(float integrator, float dt, float time_constant);
+    void relax_integrator(float integrator, float time_constant);
 
     // set slew limiter scale factor
     void set_slew_limit_scale(int8_t scale) { _slew_limit_scale = scale; }
@@ -163,7 +136,6 @@ protected:
     AP_Float _kd;
     AP_Float _kff;
     AP_Float _kimax;
-    AP_Float _kpdmax;
     AP_Float _filt_T_hz;         // PID target filter frequency in Hz
     AP_Float _filt_E_hz;         // PID error filter frequency in Hz
     AP_Float _filt_D_hz;         // PID derivative filter frequency in Hz
@@ -177,6 +149,7 @@ protected:
     } _flags;
 
     // internal variables
+    float _dt;                // timestep in seconds
     float _integrator;        // integrator value
     float _target;            // target value to enable filtering
     float _error;             // error value to enable filtering
@@ -184,15 +157,4 @@ protected:
     int8_t _slew_limit_scale;
 
     AP_PIDInfo _pid_info;
-
-private:
-    const float default_kp;
-    const float default_ki;
-    const float default_kd;
-    const float default_kff;
-    const float default_kimax;
-    const float default_filt_T_hz;
-    const float default_filt_E_hz;
-    const float default_filt_D_hz;
-    const float default_slew_rate_max;
 };

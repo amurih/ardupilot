@@ -87,7 +87,7 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
 /// enabled - enable or disable parachute release
 void AP_Parachute::enabled(bool on_off)
 {
-    _enabled.set(on_off);
+    _enabled = on_off;
 
     // clear release_time
     _release_time = 0;
@@ -103,7 +103,7 @@ void AP_Parachute::release()
         return;
     }
 
-    GCS_SEND_TEXT(MAV_SEVERITY_INFO,"Parachute: Released");
+    gcs().send_text(MAV_SEVERITY_INFO,"Parachute: Released");
     AP::logger().Write_Event(LogEvent::PARACHUTE_RELEASED);
 
     // set release time to current system time
@@ -114,7 +114,7 @@ void AP_Parachute::release()
     _release_initiated = true;
 
     // update AP_Notify
-    AP_Notify::flags.parachute_release = true;
+    AP_Notify::flags.parachute_release = 1;
 }
 
 /// update - shuts off the trigger should be called at about 10hz
@@ -137,14 +137,9 @@ void AP_Parachute::update()
             if (_release_type == AP_PARACHUTE_TRIGGER_TYPE_SERVO) {
                 // move servo
                 SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_on_pwm);
-#if AP_RELAY_ENABLED
             } else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
                 // set relay
-                AP_Relay*_relay = AP::relay();
-                if (_relay != nullptr) {
-                    _relay->on(_release_type);
-                }
-#endif
+                _relay.on(_release_type);
             }
             _release_in_progress = true;
             _released = true;
@@ -154,20 +149,15 @@ void AP_Parachute::update()
         if (_release_type == AP_PARACHUTE_TRIGGER_TYPE_SERVO) {
             // move servo back to off position
             SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
-#if AP_RELAY_ENABLED
         } else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
             // set relay back to zero volts
-            AP_Relay*_relay = AP::relay();
-            if (_relay != nullptr) {
-                _relay->off(_release_type);
-            }
-#endif
+            _relay.off(_release_type);
         }
         // reset released flag and release_time
         _release_in_progress = false;
         _release_time = 0;
         // update AP_Notify
-        AP_Notify::flags.parachute_release = false;
+        AP_Notify::flags.parachute_release = 0;
     }
 }
 
@@ -215,18 +205,10 @@ bool AP_Parachute::arming_checks(size_t buflen, char *buffer) const
                 hal.util->snprintf(buffer, buflen, "Chute has no channel");
                 return false;
             }
-        } else {
-#if AP_RELAY_ENABLED
-            AP_Relay*_relay = AP::relay();
-            if (_relay == nullptr || !_relay->enabled(_release_type)) {
-                hal.util->snprintf(buffer, buflen, "Chute invalid relay %d", int(_release_type));
-                return false;
-            }
-#else
-            hal.util->snprintf(buffer, buflen, "AP_Relay not available");
-#endif
+        } else if (!_relay.enabled(_release_type)) {
+            hal.util->snprintf(buffer, buflen, "Chute invalid relay %d", int(_release_type));
+            return false;
         }
-
         if (_release_initiated) {
             hal.util->snprintf(buffer, buflen, "Chute is released");
             return false;

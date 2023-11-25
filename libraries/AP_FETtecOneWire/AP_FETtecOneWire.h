@@ -21,7 +21,7 @@
 #include <AP_HAL/AP_HAL.h>
 
 #ifndef AP_FETTEC_ONEWIRE_ENABLED
-#define AP_FETTEC_ONEWIRE_ENABLED BOARD_FLASH_SIZE > 1024
+#define AP_FETTEC_ONEWIRE_ENABLED !HAL_MINIMIZE_FEATURES && BOARD_FLASH_SIZE > 1024
 #endif
 
 // Support both full-duplex at 500Kbit/s as well as half-duplex at 2Mbit/s (optional feature)
@@ -67,7 +67,8 @@ public:
     AP_FETtecOneWire();
 
     /// Do not allow copies
-    CLASS_NO_COPY(AP_FETtecOneWire);
+    AP_FETtecOneWire(const AP_FETtecOneWire &other) = delete;
+    AP_FETtecOneWire &operator=(const AP_FETtecOneWire&) = delete;
 
     static const struct AP_Param::GroupInfo var_info[];
 

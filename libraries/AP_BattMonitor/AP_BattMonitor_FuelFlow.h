@@ -1,10 +1,7 @@
 #pragma once
 
-#include "AP_BattMonitor_Analog.h"
-
-#if AP_BATTERY_FUELFLOW_ENABLED
-
 #include "AP_BattMonitor.h"
+#include "AP_BattMonitor_Analog.h"
 
 class AP_BattMonitor_FuelFlow : public AP_BattMonitor_Analog
 {
@@ -35,5 +32,3 @@ private:
 
     int8_t last_pin = -1;
 };
-
-#endif  // AP_BATTERY_FUELFLOW_ENABLED

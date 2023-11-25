@@ -1,12 +1,7 @@
-#include "AP_BattMonitor_config.h"
-
-#if AP_BATTERY_SUM_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_Common.h>
 #include <AP_Math/AP_Math.h>
 #include "AP_BattMonitor.h"
-
 #include "AP_BattMonitor_Sum.h"
 
 /*
@@ -97,5 +92,3 @@ AP_BattMonitor_Sum::read()
         _state.last_time_micros = tnow_us;
     }
 }
-
-#endif  // AP_BATTERY_SUM_ENABLED

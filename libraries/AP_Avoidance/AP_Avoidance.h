@@ -40,7 +40,8 @@ public:
     AP_Avoidance(class AP_ADSB &adsb);
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_Avoidance);
+    AP_Avoidance(const AP_Avoidance &other) = delete;
+    AP_Avoidance &operator=(const AP_Avoidance&) = delete;
 
     // get singleton instance
     static AP_Avoidance *get_singleton() {
@@ -94,8 +95,8 @@ public:
     void update();
 
     // enable or disable avoidance
-    void enable() { _enabled.set(true); };
-    void disable() { _enabled.set(false); };
+    void enable() { _enabled = true; };
+    void disable() { _enabled = false; };
 
     // current overall threat level
     MAV_COLLISION_THREAT_LEVEL current_threat_level() const;

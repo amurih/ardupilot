@@ -148,13 +148,11 @@ void AP_Hott_Telem::send_EAM(void)
     msg.climbrate = uint16_t(30000.5 + vel.z * -100);
     msg.climbrate3s = 120 + vel.z * -3;
 
-#if AP_RPM_ENABLED
     const AP_RPM *rpm = AP::rpm();
     float rpm_value;
     if (rpm && rpm->get_rpm(0, rpm_value)) {
         msg.rpm = rpm_value * 0.1;
     }
-#endif
 
     AP_Stats *stats = AP::stats();
     if (stats) {
@@ -289,14 +287,12 @@ void AP_Hott_Telem::send_GPS(void)
 
     msg.home_direction = degrees(atan2f(home_vec.y, home_vec.x)) * 0.5 + 0.5;
 
-#if AP_RTC_ENABLED
     AP_RTC &rtc = AP::rtc();
     {
         WITH_SEMAPHORE(rtc.get_semaphore());
         uint16_t ms;
         rtc.get_system_clock_utc(msg.gps_time_h, msg.gps_time_m, msg.gps_time_s, ms);
     }
-#endif
 
     send_packet((const uint8_t *)&msg, sizeof(msg));
 }
@@ -409,6 +405,7 @@ void AP_Hott_Telem::loop(void)
 {
     uart->begin(19200, 10, 10);
     uart->set_unbuffered_writes(true);
+    uart->set_blocking_writes(true);
 
     while (true) {
         hal.scheduler->delay_microseconds(1500);

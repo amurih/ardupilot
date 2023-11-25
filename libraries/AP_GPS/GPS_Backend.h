@@ -18,12 +18,7 @@
  */
 #pragma once
 
-#include "AP_GPS_config.h"
-
-#if AP_GPS_ENABLED
-
 #include <GCS_MAVLink/GCS_MAVLink.h>
-#include <GCS_MAVLink/GCS_config.h>
 #include <AP_RTC/JitterCorrection.h>
 #include "AP_GPS.h"
 #include "AP_GPS_config.h"
@@ -60,15 +55,13 @@ public:
 
     virtual void inject_data(const uint8_t *data, uint16_t len);
 
-#if HAL_GCS_ENABLED
     //MAVLink methods
     virtual bool supports_mavlink_gps_rtk_message() const { return false; }
     virtual void send_mavlink_gps_rtk(mavlink_channel_t chan);
-    virtual void handle_msg(const mavlink_message_t &msg) { return ; }
-#endif
 
     virtual void broadcast_configuration_failure_reason(void) const { return ; }
 
+    virtual void handle_msg(const mavlink_message_t &msg) { return ; }
 #if HAL_MSP_GPS_ENABLED
     virtual void handle_msp(const MSP::msp_gps_data_message_t &pkt) { return; }
 #endif
@@ -98,7 +91,9 @@ public:
     virtual bool get_error_codes(uint32_t &error_codes) const { return false; }
 
     // return iTOW of last message, or zero if not supported
-    uint32_t get_last_itow_ms(void) const;
+    uint32_t get_last_itow_ms(void) const {
+        return (_pseudo_itow_delta_ms == 0)?(_last_itow_ms):((_pseudo_itow/1000ULL) + _pseudo_itow_delta_ms);
+    }
 
     // check if an option is set
     bool option_set(const AP_GPS::DriverOptions option) const {
@@ -113,17 +108,15 @@ protected:
     uint64_t _last_pps_time_us;
     JitterCorrection jitter_correction;
     uint32_t _last_itow_ms;
-    bool _have_itow;
+
+    // common utility functions
+    int32_t swap_int32(int32_t v) const;
+    int16_t swap_int16(int16_t v) const;
 
     /*
       fill in 3D velocity from 2D components
      */
     void fill_3d_velocity(void);
-
-    /*
-      fill ground course and speed from velocity
-     */
-    void velocity_to_speed_course(AP_GPS::GPS_State &s);
 
     /*
        fill in time_week_ms and time_week from BCD date and time components
@@ -160,9 +153,6 @@ protected:
     void log_data(const uint8_t *data, uint16_t length);
 #endif
 
-    // set alt in location, honouring GPS driver option for ellipsoid height
-    void set_alt_amsl_cm(AP_GPS::GPS_State &_state, int32_t alt_amsl_cm);
-
 private:
     // itow from previous message
     uint64_t _pseudo_itow;
@@ -171,18 +161,12 @@ private:
     uint32_t _rate_ms;
     uint32_t _last_rate_ms;
     uint16_t _rate_counter;
-
 #if AP_GPS_DEBUG_LOGGING_ENABLED
-    // support raw GPS logging
-    static struct loginfo {
+    struct {
         int fd = -1;
-        ByteBuffer buf{16000};
-    } logging[2];
-    static bool log_thread_created;
-    static void logging_loop(void);
-    void logging_start(void);
+        ByteBuffer buf{32768};
+        bool io_registered;
+    } logging;
+    void logging_update(void);
 #endif
-
 };
-
-#endif  // AP_GPS_ENABLED
