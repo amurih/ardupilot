@@ -1,17 +1,10 @@
-ARG BASE_IMAGE="ubuntu"
-ARG TAG="22.04"
-FROM ${BASE_IMAGE}:${TAG}
+FROM ubuntu:20.04
 WORKDIR /ardupilot
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG USER_NAME=ardupilot
 ARG USER_UID=1000
 ARG USER_GID=1000
-ARG SKIP_AP_EXT_ENV=1
-ARG SKIP_AP_GRAPHIC_ENV=1
-ARG SKIP_AP_COV_ENV=1
-ARG SKIP_AP_GIT_CHECK=1
-
 RUN groupadd ${USER_NAME} --gid ${USER_GID}\
     && useradd -l -m ${USER_NAME} -u ${USER_UID} -g ${USER_GID} -s /bin/bash
 
@@ -34,14 +27,14 @@ RUN chown -R ${USER_NAME}:${USER_NAME} /${USER_NAME}
 
 USER ${USER_NAME}
 
-ENV SKIP_AP_EXT_ENV=$SKIP_AP_EXT_ENV SKIP_AP_GRAPHIC_ENV=$SKIP_AP_GRAPHIC_ENV SKIP_AP_COV_ENV=$SKIP_AP_COV_ENV SKIP_AP_GIT_CHECK=$SKIP_AP_GIT_CHECK
+ENV SKIP_AP_EXT_ENV=1 SKIP_AP_GRAPHIC_ENV=1 SKIP_AP_COV_ENV=1 SKIP_AP_GIT_CHECK=1
 RUN Tools/environment_install/install-prereqs-ubuntu.sh -y
 
-# add waf alias to ardupilot waf to .ardupilot_env
-RUN echo "alias waf=\"/${USER_NAME}/waf\"" >> ~/.ardupilot_env
+# add waf alias to ardupilot waf to .bashrc
+RUN echo "alias waf=\"/${USER_NAME}/waf\"" >> ~/ardupilot_entrypoint.sh
 
 # Check that local/bin are in PATH for pip --user installed package
-RUN echo "if [ -d \"\$HOME/.local/bin\" ] ; then\nPATH=\"\$HOME/.local/bin:\$PATH\"\nfi" >> ~/.ardupilot_env
+RUN echo "if [ -d \"\$HOME/.local/bin\" ] ; then\nPATH=\"\$HOME/.local/bin:\$PATH\"\nfi" >> ~/ardupilot_entrypoint.sh
 
 # Create entrypoint as docker cannot do shell substitution correctly
 RUN export ARDUPILOT_ENTRYPOINT="/home/${USER_NAME}/ardupilot_entrypoint.sh" \

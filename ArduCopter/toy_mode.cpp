@@ -430,7 +430,7 @@ void ToyMode::update()
                  */
                 if (set_and_remember_mode(Mode::Number::ALT_HOLD, ModeReason::TOY_MODE)) {
                     gcs().send_text(MAV_SEVERITY_INFO, "Tmode: ALT_HOLD update arm");
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
                     copter.fence.enable(false);
 #endif
                     if (!copter.arming.arm(AP_Arming::Method::MAVLINK)) {
@@ -459,7 +459,7 @@ void ToyMode::update()
             AP_Notify::flags.hybrid_loiter = false;
 #endif
         } else if (copter.position_ok() && set_and_remember_mode(Mode::Number::LOITER, ModeReason::TOY_MODE)) {
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
             copter.fence.enable(true);
 #endif
             gcs().send_text(MAV_SEVERITY_INFO, "Tmode: LOITER update");            
@@ -622,7 +622,7 @@ void ToyMode::update()
             copter.set_mode(Mode::Number::ALT_HOLD, ModeReason::TOY_MODE);
         } else {
             copter.set_mode(Mode::Number::ALT_HOLD, ModeReason::TOY_MODE);
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
             copter.fence.enable(false);
 #endif
             if (copter.arming.arm(AP_Arming::Method::MAVLINK)) {
@@ -643,13 +643,13 @@ void ToyMode::update()
     
     if (new_mode != copter.flightmode->mode_number()) {
         load_test.running = false;
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
         copter.fence.enable(false);
 #endif
         if (set_and_remember_mode(new_mode, ModeReason::TOY_MODE)) {
             gcs().send_text(MAV_SEVERITY_INFO, "Tmode: mode %s", copter.flightmode->name4());
             // force fence on in all GPS flight modes
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
             if (copter.flightmode->requires_GPS()) {
                 copter.fence.enable(true);
             }
@@ -660,7 +660,7 @@ void ToyMode::update()
                 // if we can't RTL then land
                 gcs().send_text(MAV_SEVERITY_ERROR, "Tmode: LANDING");
                 set_and_remember_mode(Mode::Number::LAND, ModeReason::TOY_MODE);
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
                 if (copter.landing_with_GPS()) {
                     copter.fence.enable(true);
                 }
@@ -799,7 +799,7 @@ void ToyMode::action_arm(void)
     arm_check_compass();
     
     if (needs_gps && copter.arming.gps_checks(false)) {
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
         // we want GPS and checks are passing, arm and enable fence
         copter.fence.enable(true);
 #endif
@@ -815,7 +815,7 @@ void ToyMode::action_arm(void)
         AP_Notify::events.arming_failed = true;
         gcs().send_text(MAV_SEVERITY_ERROR, "Tmode: GPS arming failed");
     } else {
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
         // non-GPS mode
         copter.fence.enable(false);
 #endif
@@ -890,9 +890,9 @@ void ToyMode::blink_update(void)
     // let the TX know we are recording video
     uint32_t now = AP_HAL::millis();
     if (now - last_video_ms < 1000) {
-        AP_Notify::flags.video_recording = true;
+        AP_Notify::flags.video_recording = 1;
     } else {
-        AP_Notify::flags.video_recording = false;
+        AP_Notify::flags.video_recording = 0;
     }
     
     if (red_blink_count > 0 && green_blink_count > 0) {
@@ -954,7 +954,7 @@ void ToyMode::handle_message(const mavlink_message_t &msg)
         green_blink_count = 1;
         last_video_ms = AP_HAL::millis();
         // immediately update AP_Notify recording flag
-        AP_Notify::flags.video_recording = true;
+        AP_Notify::flags.video_recording = 1;
     } else if (strncmp(m.name, "WIFICHAN", 10) == 0) {
 #if HAL_RCINPUT_WITH_AP_RADIO
         AP_Radio *radio = AP_Radio::get_singleton();

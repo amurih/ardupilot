@@ -69,9 +69,6 @@
 #include <AC_Sprayer/AC_Sprayer.h>          // Crop sprayer library
 #include <AP_ADSB/AP_ADSB.h>                // ADS-B RF based collision avoidance module library
 #include <AP_Proximity/AP_Proximity.h>      // ArduPilot proximity sensor library
-#include <AC_PrecLand/AC_PrecLand_config.h>
-#include <AP_OpticalFlow/AP_OpticalFlow.h>
-#include <AP_Winch/AP_Winch_config.h>
 
 // Configuration
 #include "defines.h"
@@ -100,13 +97,8 @@
 #include "AP_Rally.h"           // Rally point library
 #include "AP_Arming.h"
 
-#include <AP_ExternalControl/AP_ExternalControl_config.h>
-#if AP_EXTERNAL_CONTROL_ENABLED
-#include "AP_ExternalControl_Copter.h"
-#endif
-
-#include <AP_Beacon/AP_Beacon_config.h>
-#if AP_BEACON_ENABLED
+// libraries which are dependent on #defines in defines.h and/or config.h
+#if BEACON_ENABLED == ENABLED
  #include <AP_Beacon/AP_Beacon.h>
 #endif
 
@@ -117,28 +109,32 @@
  #include <AC_WPNav/AC_WPNav_OA.h>
  #include <AC_Avoidance/AP_OAPathPlanner.h>
 #endif
-#include <AP_Gripper/AP_Gripper_config.h>
-#if AP_GRIPPER_ENABLED
+#if GRIPPER_ENABLED == ENABLED
  # include <AP_Gripper/AP_Gripper.h>
 #endif
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
  # include <AC_PrecLand/AC_PrecLand.h>
  # include <AC_PrecLand/AC_PrecLand_StateMachine.h>
 #endif
 #if MODE_FOLLOW_ENABLED == ENABLED
  # include <AP_Follow/AP_Follow.h>
 #endif
+#if AC_FENCE == ENABLED
+ # include <AC_Fence/AC_Fence.h>
+#endif
 #if AP_TERRAIN_AVAILABLE
  # include <AP_Terrain/AP_Terrain.h>
 #endif
+ # include <AP_OpticalFlow/AP_OpticalFlow.h>
 #if RANGEFINDER_ENABLED == ENABLED
  # include <AP_RangeFinder/AP_RangeFinder.h>
 #endif
 
 #include <AP_Mount/AP_Mount.h>
 
-#include <AP_Camera/AP_Camera.h>
-
+#if CAMERA == ENABLED
+ # include <AP_Camera/AP_Camera.h>
+#endif
 #if HAL_BUTTON_ENABLED
  # include <AP_Button/AP_Button.h>
 #endif
@@ -153,10 +149,12 @@
 #if TOY_MODE_ENABLED == ENABLED
  # include "toy_mode.h"
 #endif
-#if AP_WINCH_ENABLED
+#if WINCH_ENABLED == ENABLED
  # include <AP_Winch/AP_Winch.h>
 #endif
-#include <AP_RPM/AP_RPM.h>
+#if RPM_ENABLED == ENABLED
+ #include <AP_RPM/AP_RPM.h>
+#endif
 
 #if AP_SCRIPTING_ENABLED
 #include <AP_Scripting/AP_Scripting.h>
@@ -164,14 +162,6 @@
 
 #if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
 #include <AC_CustomControl/AC_CustomControl.h>                  // Custom control library
-#endif
-
-#if AC_AVOID_ENABLED && !AP_FENCE_ENABLED
-  #error AC_Avoidance relies on AP_FENCE_ENABLED which is disabled
-#endif
-
-#if AC_OAPATHPLANNER_ENABLED && !AP_FENCE_ENABLED
-  #error AP_OAPathPlanner relies on AP_FENCE_ENABLED which is disabled
 #endif
 
 // Local modules
@@ -198,9 +188,6 @@ public:
     friend class AP_AdvancedFailsafe_Copter;
 #endif
     friend class AP_Arming_Copter;
-#if AP_EXTERNAL_CONTROL_ENABLED
-    friend class AP_ExternalControl_Copter;
-#endif
     friend class ToyMode;
     friend class RC_Channel_Copter;
     friend class RC_Channels_Copter;
@@ -208,8 +195,10 @@ public:
     friend class AutoTune;
 
     friend class Mode;
+//    friend class TouyoFirst;
     friend class ModeAcro;
     friend class ModeAcro_Heli;
+    friend class ModeMythird;
     friend class ModeAltHold;
     friend class ModeAuto;
     friend class ModeAutoTune;
@@ -222,11 +211,13 @@ public:
     friend class ModeFollow;
     friend class ModeGuided;
     friend class ModeLand;
+    friend class ModeMysecond;
     friend class ModeLoiter;
     friend class ModePosHold;
     friend class ModeRTL;
     friend class ModeSmartRTL;
     friend class ModeSport;
+    friend class ModeMyfirst;
     friend class ModeStabilize;
     friend class ModeStabilize_Heli;
     friend class ModeSystemId;
@@ -235,16 +226,12 @@ public:
     friend class ModeAutorotate;
     friend class ModeTurtle;
 
-    friend class _AutoTakeoff;
-
-    friend class PayloadPlace;
-
     Copter(void);
 
 private:
 
     // key aircraft parameters passed to multiple libraries
-    AP_MultiCopter aparm;
+    AP_Vehicle::MultiCopter aparm;
 
     // Global parameters are all contained within the 'g' class.
     Parameters g;
@@ -275,7 +262,6 @@ private:
         int16_t alt_cm_glitch_protected;    // last glitch protected altitude
         int8_t glitch_count;    // non-zero number indicates rangefinder is glitching
         uint32_t glitch_cleared_ms; // system time glitch cleared
-        float terrain_offset_cm;    // filtered terrain offset (e.g. terrain's height above EKF origin)
     } rangefinder_state, rangefinder_up_state;
 
     // return rangefinder height interpolated using inertial altitude
@@ -283,7 +269,6 @@ private:
 
     class SurfaceTracking {
     public:
-
         // update_surface_offset - manages the vertical offset of the position controller to follow the
         //   measured ground or ceiling level measured using the range finder.
         void update_surface_offset();
@@ -316,7 +301,7 @@ private:
         bool reset_target;          // true if target should be reset because of change in surface being tracked
     } surface_tracking;
 
-#if AP_RPM_ENABLED
+#if RPM_ENABLED == ENABLED
     AP_RPM rpm_sensor;
 #endif
 
@@ -328,14 +313,8 @@ private:
 
     // Optical flow sensor
 #if AP_OPTICALFLOW_ENABLED
-    AP_OpticalFlow optflow;
+    OpticalFlow optflow;
 #endif
-
-    // external control library
-#if AP_EXTERNAL_CONTROL_ENABLED
-    AP_ExternalControl_Copter external_control;
-#endif
-
 
     // system time in milliseconds of last recorded yaw reset from ekf
     uint32_t ekfYawReset_ms;
@@ -347,9 +326,6 @@ private:
         uint32_t start_ms;  // system time high vibration were last detected
         uint32_t clear_ms;  // system time high vibrations stopped
     } vibration_check;
-
-    // takeoff check
-    uint32_t takeoff_check_warning_ms;  // system time user was last warned of takeoff check failure
 
     // GCS selection
     GCS_Copter _gcs; // avoid using this; use gcs()
@@ -490,7 +466,6 @@ private:
     AC_PosControl *pos_control;
     AC_WPNav *wp_nav;
     AC_Loiter *loiter_nav;
-
 #if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
     AC_CustomControl custom_control{ahrs_view, attitude_control, motors, scheduler.get_loop_period_s()};
 #endif
@@ -509,7 +484,7 @@ private:
     bool auto_trim_started = false;
 
     // Camera
-#if AP_CAMERA_ENABLED
+#if CAMERA == ENABLED
     AP_Camera camera{MASK_LOG_CAMERA};
 #endif
 
@@ -518,27 +493,32 @@ private:
     AP_Mount camera_mount;
 #endif
 
+    // AC_Fence library to reduce fly-aways
+#if AC_FENCE == ENABLED
+    AC_Fence fence;
+#endif
+
 #if AC_AVOID_ENABLED == ENABLED
     AC_Avoid avoid;
 #endif
 
     // Rally library
-#if HAL_RALLY_ENABLED
+#if AC_RALLY == ENABLED
     AP_Rally_Copter rally;
 #endif
 
     // Crop Sprayer
-#if HAL_SPRAYER_ENABLED
+#if SPRAYER_ENABLED == ENABLED
     AC_Sprayer sprayer;
 #endif
 
     // Parachute release
 #if PARACHUTE == ENABLED
-    AP_Parachute parachute;
+    AP_Parachute parachute{relay};
 #endif
 
     // Landing Gear Controller
-#if AP_LANDINGGEAR_ENABLED
+#if LANDING_GEAR_ENABLED == ENABLED
     AP_LandingGear landinggear;
 #endif
 
@@ -548,7 +528,7 @@ private:
 #endif
 
     // Precision Landing
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     AC_PrecLand precland;
     AC_PrecLand_StateMachine precland_statemachine;
 #endif
@@ -624,8 +604,7 @@ private:
         SMARTRTL           = 3,
         SMARTRTL_LAND      = 4,
         TERMINATE          = 5,
-        AUTO_DO_LAND_START = 6,
-        BRAKE_LAND         = 7
+        AUTO_DO_LAND_START = 6
     };
 
     enum class FailsafeOption {
@@ -674,7 +653,6 @@ private:
                              uint8_t &task_count,
                              uint32_t &log_bit) override;
 #if AP_SCRIPTING_ENABLED
-#if MODE_GUIDED_ENABLED == ENABLED
     bool start_takeoff(float alt) override;
     bool set_target_location(const Location& target_loc) override;
     bool set_target_pos_NED(const Vector3f& target_pos, bool use_yaw, float yaw_deg, bool use_yaw_rate, float yaw_rate_degs, bool yaw_relative, bool terrain_alt) override;
@@ -683,27 +661,20 @@ private:
     bool set_target_velocity_NED(const Vector3f& vel_ned) override;
     bool set_target_velaccel_NED(const Vector3f& target_vel, const Vector3f& target_accel, bool use_yaw, float yaw_deg, bool use_yaw_rate, float yaw_rate_degs, bool relative_yaw) override;
     bool set_target_angle_and_climbrate(float roll_deg, float pitch_deg, float yaw_deg, float climb_rate_ms, bool use_yaw_rate, float yaw_rate_degs) override;
-#endif
-#if MODE_CIRCLE_ENABLED == ENABLED
     bool get_circle_radius(float &radius_m) override;
     bool set_circle_rate(float rate_dps) override;
-#endif
     bool set_desired_speed(float speed) override;
-#if MODE_AUTO_ENABLED == ENABLED
     bool nav_scripting_enable(uint8_t mode) override;
-    bool nav_script_time(uint16_t &id, uint8_t &cmd, float &arg1, float &arg2, int16_t &arg3, int16_t &arg4) override;
+    bool nav_script_time(uint16_t &id, uint8_t &cmd, float &arg1, float &arg2) override;
     void nav_script_time_done(uint16_t id) override;
-#endif
     // lua scripts use this to retrieve EKF failsafe state
     // returns true if the EKF failsafe has triggered
     bool has_ekf_failsafed() const override;
 #endif // AP_SCRIPTING_ENABLED
-    bool is_landing() const override;
-    bool is_taking_off() const override;
     void rc_loop();
     void throttle_loop();
     void update_batt_compass(void);
-    void loop_rate_logging();
+    void fourhundred_hz_logging();
     void ten_hz_logging_loop();
     void twentyfive_hz_logging();
     void three_hz_loop();
@@ -716,7 +687,7 @@ private:
     bool get_wp_distance_m(float &distance) const override;
     bool get_wp_bearing_deg(float &bearing) const override;
     bool get_wp_crosstrack_error_m(float &xtrack_error) const override;
-    bool get_rate_ef_targets(Vector3f& rate_ef_targets) const override;
+    bool get_rate_bf_targets(Vector3f& rate_bf_targets) const override;
 
     // Attitude.cpp
     void update_throttle_hover();
@@ -725,7 +696,7 @@ private:
     void set_accel_throttle_I_from_pilot_throttle();
     void rotate_body_frame_to_NE(float &x, float &y);
     uint16_t get_pilot_speed_dn() const;
-    void run_rate_controller();
+    void run_rate_controller() { attitude_control->rate_controller_run(); }
 
 #if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
     void run_custom_controller() { custom_control.update(); }
@@ -796,7 +767,6 @@ private:
     void set_mode_SmartRTL_or_RTL(ModeReason reason);
     void set_mode_SmartRTL_or_land_with_pause(ModeReason reason);
     void set_mode_auto_do_land_start_or_RTL(ModeReason reason);
-    void set_mode_brake_or_land_with_pause(ModeReason reason);
     bool should_disarm_on_failsafe();
     void do_failsafe_action(FailsafeAction action, ModeReason reason);
     void announce_failsafe(const char *type, const char *action_undertaken=nullptr);
@@ -809,7 +779,7 @@ private:
 #endif
 
     // fence.cpp
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
     void fence_check();
 #endif
 
@@ -822,8 +792,10 @@ private:
     float get_pilot_desired_rotor_speed() const;
     void heli_update_rotor_speed_targets();
     void heli_update_autorotation();
+#if MODE_AUTOROTATE_ENABLED == ENABLED
+    void heli_set_autorotation(bool autotrotation);
+#endif
     void update_collective_low_flag(int16_t throttle_control);
-
     // inertia.cpp
     void read_inertia();
 
@@ -834,7 +806,7 @@ private:
     void set_land_complete_maybe(bool b);
     void update_throttle_mix();
 
-#if AP_LANDINGGEAR_ENABLED
+#if LANDING_GEAR_ENABLED == ENABLED
     // landing_gear.cpp
     void landinggear_update();
 #endif
@@ -846,7 +818,6 @@ private:
     void Log_Write_Control_Tuning();
     void Log_Write_Attitude();
     void Log_Write_EKF_POS();
-    void Log_Write_PIDS();
     void Log_Write_Data(LogDataID id, int32_t value);
     void Log_Write_Data(LogDataID id, uint32_t value);
     void Log_Write_Data(LogDataID id, int16_t value);
@@ -871,12 +842,8 @@ private:
     // called when an attempt to change into a mode is unsuccessful:
     void mode_change_failed(const Mode *mode, const char *reason);
     uint8_t get_mode() const override { return (uint8_t)flightmode->mode_number(); }
-    bool current_mode_requires_mission() const override;
     void update_flight_mode();
     void notify_flight_mode();
-
-    // Check if this mode can be entered from the GCS
-    bool gcs_mode_enabled(const Mode::Number mode_num);
 
     // mode_land.cpp
     void set_mode_land_with_pause(ModeReason reason);
@@ -902,11 +869,9 @@ private:
     // Parameters.cpp
     void load_parameters(void) override;
     void convert_pid_parameters(void);
-#if HAL_PROXIMITY_ENABLED
-    void convert_prx_parameters();
-#endif
     void convert_lgr_parameters(void);
     void convert_tradheli_parameters(void) const;
+    void convert_fs_options_params(void) const;
 
     // precision_landing.cpp
     void init_precland();
@@ -916,6 +881,7 @@ private:
     void default_dead_zones();
     void init_rc_in();
     void init_rc_out();
+    void enable_motor_output();
     void read_radio();
     void set_throttle_and_failsafe(uint16_t throttle_pwm);
     void set_throttle_zero_flag(int16_t throttle_control);
@@ -928,11 +894,8 @@ private:
     void read_rangefinder(void);
     bool rangefinder_alt_ok() const;
     bool rangefinder_up_ok() const;
-    void update_rangefinder_terrain_offset();
     void update_optical_flow(void);
-
-    // takeoff_check.cpp
-    void takeoff_check();
+    void compass_cal_update(void);
 
     // RC_Channel.cpp
     void save_trim();
@@ -977,6 +940,8 @@ private:
     ModeAcro mode_acro;
 #endif
 #endif
+//    TouyoFirst  mode_touyofirst;
+    ModeMythird mode_mythird;
     ModeAltHold mode_althold;
 #if MODE_AUTO_ENABLED == ENABLED
     ModeAuto mode_auto;
@@ -1004,6 +969,7 @@ private:
 #endif
     ModeLand mode_land;
 #if MODE_LOITER_ENABLED == ENABLED
+    ModeMysecond mode_mysecond;
     ModeLoiter mode_loiter;
 #endif
 #if MODE_POSHOLD_ENABLED == ENABLED
@@ -1015,6 +981,7 @@ private:
 #if FRAME_CONFIG == HELI_FRAME
     ModeStabilize_Heli mode_stabilize;
 #else
+    ModeMyfirst mode_myfirst;
     ModeStabilize mode_stabilize;
 #endif
 #if MODE_SPORT_ENABLED == ENABLED
@@ -1035,7 +1002,7 @@ private:
 #if MODE_SMARTRTL_ENABLED == ENABLED
     ModeSmartRTL mode_smartrtl;
 #endif
-#if MODE_FLOWHOLD_ENABLED == ENABLED
+#if !HAL_MINIMIZE_FEATURES && AP_OPTICALFLOW_ENABLED
     ModeFlowHold mode_flowhold;
 #endif
 #if MODE_ZIGZAG_ENABLED == ENABLED

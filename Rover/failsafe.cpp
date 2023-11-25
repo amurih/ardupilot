@@ -78,31 +78,29 @@ void Rover::failsafe_trigger(uint8_t failsafe_type, const char* type_str, bool o
             ((failsafe_type == FAILSAFE_EVENT_THROTTLE && g.fs_throttle_enabled == FS_THR_ENABLED_CONTINUE_MISSION) ||
              (failsafe_type == FAILSAFE_EVENT_GCS && g.fs_gcs_enabled == FS_GCS_ENABLED_CONTINUE_MISSION))) {
             // continue with mission in auto mode
-            gcs().send_text(MAV_SEVERITY_WARNING, "Failsafe - Continuing Auto Mode");
         } else {
-            switch ((FailsafeAction)g.fs_action.get()) {
-            case FailsafeAction::None:
+            switch (g.fs_action) {
+            case Failsafe_Action_None:
                 break;
-            case FailsafeAction::SmartRTL:
-                if (set_mode(mode_smartrtl, ModeReason::BATTERY_FAILSAFE)) {
-                    break;
-                }
-                FALLTHROUGH;
-            case FailsafeAction::RTL:
-                if (set_mode(mode_rtl, ModeReason::BATTERY_FAILSAFE)) {
-                    break;
-                }
-                FALLTHROUGH;
-            case FailsafeAction::Hold:
-                set_mode(mode_hold, ModeReason::BATTERY_FAILSAFE);
-                break;
-            case FailsafeAction::SmartRTL_Hold:
-                if (!set_mode(mode_smartrtl, ModeReason::FAILSAFE)) {
+            case Failsafe_Action_RTL:
+                if (!set_mode(mode_rtl, ModeReason::FAILSAFE)) {
                     set_mode(mode_hold, ModeReason::FAILSAFE);
                 }
                 break;
-            case FailsafeAction::Terminate:
-                arming.disarm(AP_Arming::Method::FAILSAFE_ACTION_TERMINATE);
+            case Failsafe_Action_Hold:
+                set_mode(mode_hold, ModeReason::FAILSAFE);
+                break;
+            case Failsafe_Action_SmartRTL:
+                if (!set_mode(mode_smartrtl, ModeReason::FAILSAFE)) {
+                    if (!set_mode(mode_rtl, ModeReason::FAILSAFE)) {
+                        set_mode(mode_hold, ModeReason::FAILSAFE);
+                    }
+                }
+                break;
+            case Failsafe_Action_SmartRTL_Hold:
+                if (!set_mode(mode_smartrtl, ModeReason::FAILSAFE)) {
+                    set_mode(mode_hold, ModeReason::FAILSAFE);
+                }
                 break;
             }
         }
@@ -111,28 +109,28 @@ void Rover::failsafe_trigger(uint8_t failsafe_type, const char* type_str, bool o
 
 void Rover::handle_battery_failsafe(const char* type_str, const int8_t action)
 {
-        switch ((FailsafeAction)action) {
-            case FailsafeAction::None:
+        switch ((Failsafe_Action)action) {
+            case Failsafe_Action_None:
                 break;
-            case FailsafeAction::SmartRTL:
+            case Failsafe_Action_SmartRTL:
                 if (set_mode(mode_smartrtl, ModeReason::BATTERY_FAILSAFE)) {
                     break;
                 }
                 FALLTHROUGH;
-            case FailsafeAction::RTL:
+            case Failsafe_Action_RTL:
                 if (set_mode(mode_rtl, ModeReason::BATTERY_FAILSAFE)) {
                     break;
                 }
                 FALLTHROUGH;
-            case FailsafeAction::Hold:
+            case Failsafe_Action_Hold:
                 set_mode(mode_hold, ModeReason::BATTERY_FAILSAFE);
                 break;
-            case FailsafeAction::SmartRTL_Hold:
+            case Failsafe_Action_SmartRTL_Hold:
                 if (!set_mode(mode_smartrtl, ModeReason::BATTERY_FAILSAFE)) {
                     set_mode(mode_hold, ModeReason::BATTERY_FAILSAFE);
                 }
                 break;
-            case FailsafeAction::Terminate:
+            case Failsafe_Action_Terminate:
 #if ADVANCED_FAILSAFE == ENABLED
                 char battery_type_str[17];
                 snprintf(battery_type_str, 17, "%s battery", type_str);
@@ -151,6 +149,6 @@ void Rover::handle_battery_failsafe(const char* type_str, const int8_t action)
 void Rover::afs_fs_check(void)
 {
     // perform AFS failsafe checks
-    g2.afs.check(failsafe.last_valid_rc_ms);
+    g2.afs.check(g2.fence.get_breaches() != 0, failsafe.last_valid_rc_ms);
 }
 #endif

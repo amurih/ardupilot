@@ -5,6 +5,12 @@
  *
  */
 
+#define GSCALAR(v, name, def) { tracker.g.v.vtype, name, Parameters::k_param_ ## v, &tracker.g.v, {def_value : def} }
+#define ASCALAR(v, name, def) { tracker.aparm.v.vtype, name, Parameters::k_param_ ## v, (const void *)&tracker.aparm.v, {def_value : def} }
+#define GGROUP(v, name, class) { AP_PARAM_GROUP, name, Parameters::k_param_ ## v, &tracker.g.v, {group_info : class::var_info} }
+#define GOBJECT(v, name, class) { AP_PARAM_GROUP, name, Parameters::k_param_ ## v, (const void *)&tracker.v, {group_info : class::var_info} }
+#define GOBJECTN(v, pname, name, class) { AP_PARAM_GROUP, name, Parameters::k_param_ ## pname, (const void *)&tracker.v, {group_info : class::var_info} }
+
 const AP_Param::Info Tracker::var_info[] = {
     // @Param: FORMAT_VERSION
     // @DisplayName: Eeprom format version number
@@ -130,7 +136,7 @@ const AP_Param::Info Tracker::var_info[] = {
 
     // @Param: ONOFF_PITCH_MINT
     // @DisplayName: Pitch minimum movement time
-    // @Description: Minimum amount of time in seconds to move in pitch
+    // @Description: Minimim amount of time in seconds to move in pitch
     // @Units: s
     // @Increment: 0.01
     // @Range: 0 2
@@ -267,9 +273,9 @@ const AP_Param::Info Tracker::var_info[] = {
     // @User: Standard
     GSCALAR(log_bitmask, "LOG_BITMASK", DEFAULT_LOG_BITMASK),
 
-    // @Group: INS
+    // @Group: INS_
     // @Path: ../libraries/AP_InertialSensor/AP_InertialSensor.cpp
-    GOBJECT(ins,                    "INS", AP_InertialSensor),
+    GOBJECT(ins,                    "INS_", AP_InertialSensor),
 
     // @Group: AHRS_
     // @Path: ../libraries/AP_AHRS/AP_AHRS.cpp
@@ -379,14 +385,6 @@ const AP_Param::Info Tracker::var_info[] = {
     // @Increment: 0.5
     // @User: Advanced
 
-    // @Param: PITCH2SRV_PDMX
-    // @DisplayName: Pitch axis controller PD sum maximum
-    // @Description: Pitch axis controller PD sum maximum.  The maximum/minimum value that the sum of the P and D term can output
-    // @Range: 0 4000
-    // @Increment: 10
-    // @Units: d%
-    // @User: Advanced
-
     GGROUP(pidPitch2Srv,       "PITCH2SRV_", AC_PID),
 
     // @Param: YAW2SRV_P
@@ -454,14 +452,6 @@ const AP_Param::Info Tracker::var_info[] = {
     // @Description: Sets an upper limit on the slew rate produced by the combined P and D gains. If the amplitude of the control action produced by the rate feedback exceeds this value, then the D+P gain is reduced to respect the limit. This limits the amplitude of high frequency oscillations caused by an excessive gain. The limit should be set to no more than 25% of the actuators maximum slew rate to allow for load effects. Note: The gain will not be reduced to less than 10% of the nominal value. A value of zero will disable this feature.
     // @Range: 0 200
     // @Increment: 0.5
-    // @User: Advanced
-
-    // @Param: YAW2SRV_PDMX
-    // @DisplayName: Yaw axis controller PD sum maximum
-    // @Description: Yaw axis controller PD sum maximum.  The maximum/minimum value that the sum of the P and D term can output
-    // @Range: 0 4000
-    // @Increment: 10
-    // @Units: d%
     // @User: Advanced
 
     GGROUP(pidYaw2Srv,         "YAW2SRV_", AC_PID),
@@ -535,23 +525,11 @@ const AP_Param::Info Tracker::var_info[] = {
 
     // @Group:
     // @Path: ../libraries/AP_Vehicle/AP_Vehicle.cpp
-    PARAM_VEHICLE_INFO,
+    { AP_PARAM_GROUP, "", Parameters::k_param_vehicle, (const void *)&tracker, {group_info : AP_Vehicle::var_info} },
 
     // @Group: LOG
     // @Path: ../libraries/AP_Logger/AP_Logger.cpp
     GOBJECT(logger,           "LOG",  AP_Logger),
-
-#if HAL_NAVEKF2_AVAILABLE
-    // @Group: EK2_
-    // @Path: ../libraries/AP_NavEKF2/AP_NavEKF2.cpp
-    GOBJECTN(ahrs.EKF2, NavEKF2, "EK2_", NavEKF2),
-#endif
-
-#if HAL_NAVEKF3_AVAILABLE
-    // @Group: EK3_
-    // @Path: ../libraries/AP_NavEKF3/AP_NavEKF3.cpp
-    GOBJECTN(ahrs.EKF3, NavEKF3, "EK3_", NavEKF3),
-#endif
 
     AP_VAREND
 };
@@ -571,7 +549,6 @@ void Tracker::load_parameters(void)
         g.format_version.set_and_save(Parameters::k_format_version);
         hal.console->printf("done.\n");
     }
-    g.format_version.set_default(Parameters::k_format_version);
 
     uint32_t before = AP_HAL::micros();
     // Load all auto-loaded EEPROM variables

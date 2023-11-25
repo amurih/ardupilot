@@ -101,7 +101,7 @@ void Copter::thrust_loss_check()
 {
     static uint16_t thrust_loss_counter;  // number of iterations vehicle may have been crashed
 
-    // no-op if suppressed by flight options param
+    // no-op if suppresed by flight options param
     if ((copter.g2.flight_options & uint32_t(FlightOptions::DISABLE_THRUST_LOSS_CHECK)) != 0) {
         return;
     }
@@ -170,7 +170,7 @@ void Copter::thrust_loss_check()
         motors->set_thrust_boost(true);
         // the motors library disables this when it is no longer needed to achieve the commanded output
 
-#if AP_GRIPPER_ENABLED
+#if GRIPPER_ENABLED == ENABLED
         if ((copter.g2.flight_options & uint32_t(FlightOptions::RELEASE_GRIPPER_ON_THRUST_LOSS)) != 0) {
             copter.g2.gripper.release();
         }
@@ -181,7 +181,7 @@ void Copter::thrust_loss_check()
 // check for a large yaw imbalance, could be due to badly calibrated ESC or misaligned motors
 void Copter::yaw_imbalance_check()
 {
-    // no-op if suppressed by flight options param
+    // no-op if suppresed by flight options param
     if ((copter.g2.flight_options & uint32_t(FlightOptions::DISABLE_YAW_IMBALANCE_WARNING)) != 0) {
         return;
     }
@@ -337,7 +337,7 @@ void Copter::parachute_release()
     // release parachute
     parachute.release();
 
-#if AP_LANDINGGEAR_ENABLED
+#if LANDING_GEAR_ENABLED == ENABLED
     // deploy landing gear
     landinggear.set_position(AP_LandingGear::LandingGear_Deploy);
 #endif

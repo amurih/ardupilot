@@ -16,7 +16,8 @@ public:
     }
 
     /* Do not allow copies */
-    CLASS_NO_COPY(AP_Arming_Blimp);
+    AP_Arming_Blimp(const AP_Arming_Blimp &other) = delete;
+    AP_Arming_Blimp &operator=(const AP_Arming_Blimp&) = delete;
 
     bool rc_calibration_checks(bool display_failure) override;
 

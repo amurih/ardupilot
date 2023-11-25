@@ -72,7 +72,7 @@ const AP_Scheduler::Task Sub::scheduler_tasks[] = {
     SCHED_TASK(fifty_hz_loop,         50,     75,   3),
     SCHED_TASK_CLASS(AP_GPS, &sub.gps, update, 50, 200,   6),
 #if AP_OPTICALFLOW_ENABLED
-    SCHED_TASK_CLASS(AP_OpticalFlow,          &sub.optflow,             update,         200, 160,   9),
+    SCHED_TASK_CLASS(OpticalFlow,          &sub.optflow,             update,         200, 160,   9),
 #endif
     SCHED_TASK(update_batt_compass,   10,    120,  12),
     SCHED_TASK(read_rangefinder,      20,    100,  15),
@@ -80,13 +80,17 @@ const AP_Scheduler::Task Sub::scheduler_tasks[] = {
     SCHED_TASK(three_hz_loop,          3,     75,  21),
     SCHED_TASK(update_turn_counter,   10,     50,  24),
     SCHED_TASK_CLASS(AP_Baro,             &sub.barometer,    accumulate,          50,  90,  27),
+    SCHED_TASK_CLASS(AP_Notify,           &sub.notify,       update,              50,  90,  30),
     SCHED_TASK(one_hz_loop,            1,    100,  33),
     SCHED_TASK_CLASS(GCS,                 (GCS*)&sub._gcs,   update_receive,     400, 180,  36),
     SCHED_TASK_CLASS(GCS,                 (GCS*)&sub._gcs,   update_send,        400, 550,  39),
+#if AC_FENCE == ENABLED
+    SCHED_TASK_CLASS(AC_Fence,            &sub.fence,        update,              10, 100,  42),
+#endif
 #if HAL_MOUNT_ENABLED
     SCHED_TASK_CLASS(AP_Mount,            &sub.camera_mount, update,              50,  75,  45),
 #endif
-#if AP_CAMERA_ENABLED
+#if CAMERA == ENABLED
     SCHED_TASK_CLASS(AP_Camera,           &sub.camera,       update,              50,  75,  48),
 #endif
     SCHED_TASK(ten_hz_logging_loop,   10,    350,  51),
@@ -94,15 +98,13 @@ const AP_Scheduler::Task Sub::scheduler_tasks[] = {
     SCHED_TASK_CLASS(AP_Logger,           &sub.logger,       periodic_tasks,     400, 300,  57),
     SCHED_TASK_CLASS(AP_InertialSensor,   &sub.ins,          periodic,           400,  50,  60),
     SCHED_TASK_CLASS(AP_Scheduler,        &sub.scheduler,    update_logging,     0.1,  75,  63),
-#if AP_RPM_ENABLED
+#if RPM_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_RPM,              &sub.rpm_sensor,   update,              10, 200,  66),
 #endif
+    SCHED_TASK_CLASS(Compass,             &sub.compass,      cal_update,         100, 100,  69),
     SCHED_TASK(terrain_update,        10,    100,  72),
-#if AP_GRIPPER_ENABLED
+#if GRIPPER_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_Gripper,          &sub.g2.gripper,   update,              10,  75,  75),
-#endif
-#if STATS_ENABLED == ENABLED
-    SCHED_TASK(stats_update,           1,    200,  76),
 #endif
 #ifdef USERHOOK_FASTLOOP
     SCHED_TASK(userhook_FastLoop,    100,     75,  78),
@@ -134,14 +136,9 @@ constexpr int8_t Sub::_failsafe_priorities[5];
 
 void Sub::run_rate_controller()
 {
-    const float last_loop_time_s = AP::scheduler().get_last_loop_time_s();
-    motors.set_dt(last_loop_time_s);
-    attitude_control.set_dt(last_loop_time_s);
-    pos_control.set_dt(last_loop_time_s);
-
     //don't run rate controller in manual or motordetection modes
-    if (control_mode != Mode::Number::MANUAL && control_mode != Mode::Number::MOTOR_DETECT) {
-        // run low level rate controllers that only require IMU data and set loop time
+    if (control_mode != MANUAL && control_mode != MOTOR_DETECT) {
+        // run low level rate controllers that only require IMU data
         attitude_control.rate_controller_run();
     }
 }
@@ -201,7 +198,7 @@ void Sub::ten_hz_logging_loop()
     if (should_log(MASK_LOG_RCOUT)) {
         logger.Write_RCOUT();
     }
-    if (should_log(MASK_LOG_NTUN) && (sub.flightmode->requires_GPS() || !sub.flightmode->has_manual_throttle())) {
+    if (should_log(MASK_LOG_NTUN) && (mode_requires_GPS(control_mode) || !mode_has_manual_throttle(control_mode))) {
         pos_control.write_log();
     }
     if (should_log(MASK_LOG_IMU) || should_log(MASK_LOG_IMU_FAST) || should_log(MASK_LOG_IMU_RAW)) {
@@ -210,11 +207,6 @@ void Sub::ten_hz_logging_loop()
     if (should_log(MASK_LOG_CTUN)) {
         attitude_control.control_monitor_log();
     }
-#if HAL_MOUNT_ENABLED
-    if (should_log(MASK_LOG_CAMERA)) {
-        camera_mount.write_log();
-    }
-#endif
 }
 
 // twentyfive_hz_logging_loop
@@ -255,14 +247,12 @@ void Sub::three_hz_loop()
     // check if we've lost terrain data
     failsafe_terrain_check();
 
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
     // check if we have breached a fence
     fence_check();
-#endif // AP_FENCE_ENABLED
+#endif // AC_FENCE_ENABLED
 
-#if AP_SERVORELAYEVENTS_ENABLED
     ServoRelayEvents.update_events();
-#endif
 }
 
 // one_hz_loop - runs at 1Hz
@@ -354,16 +344,5 @@ bool Sub::get_wp_crosstrack_error_m(float &xtrack_error) const
     xtrack_error = 0;
     return true;
 }
-
-#if STATS_ENABLED == ENABLED
-/*
-  update AP_Stats
-*/
-void Sub::stats_update(void)
-{
-    g2.stats.set_flying(motors.armed());
-    g2.stats.update();
-}
-#endif
 
 AP_HAL_MAIN_CALLBACKS(&sub);

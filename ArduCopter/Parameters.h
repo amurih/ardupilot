@@ -1,20 +1,14 @@
 #pragma once
 
-#define AP_PARAM_VEHICLE_NAME copter
-
 #include <AP_Common/AP_Common.h>
 #include "RC_Channel.h"
 #include <AP_Proximity/AP_Proximity.h>
 
-#include <AP_Gripper/AP_Gripper_config.h>
-#if AP_GRIPPER_ENABLED
+#if GRIPPER_ENABLED == ENABLED
  # include <AP_Gripper/AP_Gripper.h>
 #endif
 #if MODE_FOLLOW_ENABLED == ENABLED
  # include <AP_Follow/AP_Follow.h>
-#endif
-#if WEATHERVANE_ENABLED == ENABLED
- #include <AC_AttitudeControl/AC_WeatherVane.h>
 #endif
 
 // Global parameter class.
@@ -149,7 +143,7 @@ public:
         k_param_gpslock_limit,          // deprecated - remove
         k_param_geofence_limit,         // deprecated - remove
         k_param_altitude_limit,         // deprecated - remove
-        k_param_fence_old,              // only used for conversion
+        k_param_fence,
         k_param_gps_glitch,             // deprecated
         k_param_baro_glitch,            // 71 - deprecated
 
@@ -407,7 +401,7 @@ public:
     AP_Int16        rtl_alt_final;
     AP_Int16        rtl_climb_min;              // rtl minimum climb in cm
     AP_Int32        rtl_loiter_time;
-    AP_Enum<ModeRTL::RTLAltType> rtl_alt_type;
+    AP_Int8         rtl_alt_type;
 #endif
 
     AP_Int8         failsafe_gcs;               // ground station failsafe behavior
@@ -494,7 +488,6 @@ public:
 
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo var_info[];
-    static const struct AP_Param::GroupInfo var_info2[];
 
     // altitude at which nav control can start in takeoff
     AP_Float wp_navalt_min;
@@ -509,7 +502,7 @@ public:
     AP_Stats stats;
 #endif
 
-#if AP_GRIPPER_ENABLED
+#if GRIPPER_ENABLED
     AP_Gripper gripper;
 #endif
 
@@ -522,12 +515,10 @@ public:
     // ground effect compensation enable/disable
     AP_Int8 gndeffect_comp_enabled;
 
-#if AP_TEMPCALIBRATION_ENABLED
     // temperature calibration handling
     AP_TempCalibration temp_calibration;
-#endif
 
-#if AP_BEACON_ENABLED
+#if BEACON_ENABLED == ENABLED
     // beacon (non-GPS positioning) library
     AP_Beacon beacon;
 #endif
@@ -567,7 +558,7 @@ public:
 #endif
 
     // wheel encoder and winch
-#if AP_WINCH_ENABLED
+#if WINCH_ENABLED == ENABLED
     AP_Winch winch;
 #endif
 
@@ -581,7 +572,7 @@ public:
     ToyMode toy_mode;
 #endif
 
-#if MODE_FLOWHOLD_ENABLED
+#if AP_OPTICALFLOW_ENABLED
     // we need a pointer to the mode for the G2 table
     void *mode_flowhold_ptr;
 #endif
@@ -676,25 +667,6 @@ public:
     AP_Int8                 surftrak_mode;
     AP_Int8                 failsafe_dr_enable;
     AP_Int16                failsafe_dr_timeout;
-    AP_Float                surftrak_tc;
-
-    // ramp time of throttle during take-off
-    AP_Float takeoff_throttle_slew_time;
-    AP_Float takeoff_throttle_max;
-#if HAL_WITH_ESC_TELEM && FRAME_CONFIG != HELI_FRAME
-    AP_Int16 takeoff_rpm_min;
-    AP_Int16 takeoff_rpm_max;
-#endif
-
-#if WEATHERVANE_ENABLED == ENABLED
-    AC_WeatherVane weathervane;
-#endif
-
-    // payload place parameters
-    AP_Float pldp_thrust_placed_fraction;
-    AP_Float pldp_range_finder_minimum_m;
-    AP_Float pldp_delay_s;
-    AP_Float pldp_descent_speed_ms;
 };
 
 extern const AP_Param::Info        var_info[];

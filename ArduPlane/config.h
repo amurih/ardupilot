@@ -25,6 +25,15 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// Advanced Failsafe support
+//
+
+#ifndef ADVANCED_FAILSAFE
+ # define ADVANCED_FAILSAFE ENABLED
+#endif
+
+
+//////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 // RADIO CONFIGURATION
 //////////////////////////////////////////////////////////////////////////////
@@ -100,6 +109,13 @@
 
 #ifndef DSPOILR_RUD_RATE_DEFAULT
  #define DSPOILR_RUD_RATE_DEFAULT 100
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// CAMERA TRIGGER AND CONTROL
+//
+#ifndef CAMERA
+ # define CAMERA         ENABLED
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -217,6 +233,11 @@
  # define SCALING_SPEED          15.0
 #endif
 
+// use this to disable geo-fencing
+#ifndef AC_FENCE
+ # define AC_FENCE ENABLED
+#endif
+
 // a digital pin to set high when the geo-fence triggers. Defaults
 // to -1, which means don't activate a pin
 #ifndef FENCE_TRIGGERED_PIN
@@ -229,6 +250,12 @@
 #define PARACHUTE HAL_PARACHUTE_ENABLED
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+// Payload Gripper
+#ifndef GRIPPER_ENABLED
+  #define GRIPPER_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
+
 #ifndef STATS_ENABLED
  # define STATS_ENABLED ENABLED
 #endif
@@ -238,7 +265,11 @@
 #endif
 
 #ifndef OFFBOARD_GUIDED
- #define OFFBOARD_GUIDED 1
+ #define OFFBOARD_GUIDED !HAL_MINIMIZE_FEATURES
+#endif
+
+#ifndef LANDING_GEAR_ENABLED
+ #define LANDING_GEAR_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

@@ -79,6 +79,11 @@ void Copter::failsafe_check()
 void Copter::afs_fs_check(void)
 {
     // perform AFS failsafe checks
-    g2.afs.check(last_radio_update_ms);
+#if AC_FENCE
+    const bool fence_breached = fence.get_breaches() != 0;
+#else
+    const bool fence_breached = false;
+#endif
+    g2.afs.check(fence_breached, last_radio_update_ms);
 }
 #endif

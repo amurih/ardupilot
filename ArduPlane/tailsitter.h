@@ -121,8 +121,6 @@ private:
     bool _have_elevator;
     bool _have_aileron;
     bool _have_rudder;
-    bool _have_elevon;
-    bool _have_v_tail;
 
     // refences for convenience
     QuadPlane& quadplane;
@@ -159,9 +157,7 @@ public:
 
     bool show_vtol_view() const override;
 
-    void set_FW_roll_pitch(int32_t& nav_pitch_cd, int32_t& nav_roll_cd) override;
-
-    bool allow_stick_mixing() const override;
+    void set_FW_roll_pitch(int32_t& nav_pitch_cd, int32_t& nav_roll_cd, bool& allow_stick_mixing) override;
 
     MAV_VTOL_STATE get_mav_vtol_state() const override;
 

@@ -34,19 +34,19 @@ bool ModeLand::init(bool ignore_checks)
     copter.ap.prec_land_active = false;
 
     // initialise yaw
-    auto_yaw.set_mode(AutoYaw::Mode::HOLD);
+    auto_yaw.set_mode(AUTO_YAW_HOLD);
 
-#if AP_LANDINGGEAR_ENABLED
+#if LANDING_GEAR_ENABLED == ENABLED
     // optionally deploy landing gear
     copter.landinggear.deploy_for_landing();
 #endif
 
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
     // disable the fence on landing
     copter.fence.auto_disable_fence_for_landing();
 #endif
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     // initialise precland state machine
     copter.precland_statemachine.init();
 #endif
@@ -98,6 +98,7 @@ void ModeLand::gps_run()
 void ModeLand::nogps_run()
 {
     float target_roll = 0.0f, target_pitch = 0.0f;
+    float target_yaw_rate = 0;
 
     // process pilot inputs
     if (!copter.failsafe.radio) {
@@ -115,6 +116,11 @@ void ModeLand::nogps_run()
             get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max_cd());
         }
 
+        // get pilot's desired yaw rate
+        target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->norm_input_dz());
+        if (!is_zero(target_yaw_rate)) {
+            auto_yaw.set_mode(AUTO_YAW_HOLD);
+        }
     }
 
     // disarm when the landing detector says we've landed
@@ -138,7 +144,7 @@ void ModeLand::nogps_run()
     }
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, auto_yaw.get_heading().yaw_rate_cds);
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
 }
 
 // do_not_use_GPS - forces land-mode to not use the GPS but instead rely on pilot input for roll and pitch

@@ -9,12 +9,21 @@ class GCS_Sub : public GCS
 
 public:
 
-    // the following define expands to a pair of methods to retrieve a
-    // pointer to an object of the correct subclass for the link at
-    // offset ofs.  These are of the form:
-    // GCS_MAVLINK_XXXX *chan(const uint8_t ofs) override;
-    // const GCS_MAVLINK_XXXX *chan(const uint8_t ofs) override const;
-    GCS_MAVLINK_CHAN_METHOD_DEFINITIONS(GCS_MAVLINK_Sub);
+    // return GCS link at offset ofs
+    GCS_MAVLINK_Sub *chan(const uint8_t ofs) override {
+        if (ofs > _num_gcs) {
+            INTERNAL_ERROR(AP_InternalError::error_t::gcs_offset);
+            return nullptr;
+        }
+        return (GCS_MAVLINK_Sub*)_chan[ofs];
+    }
+    const GCS_MAVLINK_Sub *chan(const uint8_t ofs) const override {
+        if (ofs > _num_gcs) {
+            INTERNAL_ERROR(AP_InternalError::error_t::gcs_offset);
+            return nullptr;
+        }
+        return (GCS_MAVLINK_Sub*)_chan[ofs];
+    }
 
     void update_vehicle_sensor_status_flags() override;
 

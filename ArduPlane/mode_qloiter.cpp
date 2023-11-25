@@ -28,13 +28,6 @@ void ModeQLoiter::update()
 // run quadplane loiter controller
 void ModeQLoiter::run()
 {
-    const uint32_t now = AP_HAL::millis();
-    if (quadplane.tailsitter.in_vtol_transition(now)) {
-        // Tailsitters in FW pull up phase of VTOL transition run FW controllers
-        Mode::run();
-        return;
-    }
-
     if (quadplane.throttle_wait) {
         quadplane.set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
         attitude_control->set_throttle_out(0, true, 0);
@@ -42,10 +35,6 @@ void ModeQLoiter::run()
         pos_control->relax_z_controller(0);
         loiter_nav->clear_pilot_desired_acceleration();
         loiter_nav->init_target();
-
-        // Stabilize with fixed wing surfaces
-        plane.stabilize_roll();
-        plane.stabilize_pitch();
         return;
     }
     if (!quadplane.motors->armed()) {
@@ -56,6 +45,7 @@ void ModeQLoiter::run()
         loiter_nav->soften_for_landing();
     }
 
+    const uint32_t now = AP_HAL::millis();
     if (now - quadplane.last_loiter_ms > 500) {
         loiter_nav->clear_pilot_desired_acceleration();
         loiter_nav->init_target();
@@ -83,8 +73,6 @@ void ModeQLoiter::run()
     plane.nav_roll_cd = loiter_nav->get_roll();
     plane.nav_pitch_cd = loiter_nav->get_pitch();
 
-    plane.quadplane.assign_tilt_to_fwd_thr();
-
     if (quadplane.transition->set_VTOL_roll_pitch_limit(plane.nav_roll_cd, plane.nav_pitch_cd)) {
         pos_control->set_externally_limited_xy();
     }
@@ -101,33 +89,27 @@ void ModeQLoiter::run()
         if (poscontrol.get_state() < QuadPlane::QPOS_LAND_FINAL && quadplane.check_land_final()) {
             poscontrol.set_state(QuadPlane::QPOS_LAND_FINAL);
             quadplane.setup_target_position();
-#if AP_ICENGINE_ENABLED
             // cut IC engine if enabled
             if (quadplane.land_icengine_cut != 0) {
-                plane.g2.ice_control.engine_control(0, 0, 0, false);
+                plane.g2.ice_control.engine_control(0, 0, 0);
             }
-#endif  // AP_ICENGINE_ENABLED
         }
         float height_above_ground = plane.relative_ground_altitude(plane.g.rangefinder_landing);
         float descent_rate_cms = quadplane.landing_descent_rate_cms(height_above_ground);
 
-        if (poscontrol.get_state() == QuadPlane::QPOS_LAND_FINAL && !quadplane.option_is_set(QuadPlane::OPTION::DISABLE_GROUND_EFFECT_COMP)) {
-            ahrs.set_touchdown_expected(true);
+        if (poscontrol.get_state() == QuadPlane::QPOS_LAND_FINAL && (quadplane.options & QuadPlane::OPTION_DISABLE_GROUND_EFFECT_COMP) == 0) {
+            quadplane.ahrs.set_touchdown_expected(true);
         }
 
-        pos_control->land_at_climb_rate_cm(-descent_rate_cms, descent_rate_cms>0);
+        quadplane.set_climb_rate_cms(-descent_rate_cms, descent_rate_cms>0);
         quadplane.check_land_complete();
     } else if (plane.control_mode == &plane.mode_guided && quadplane.guided_takeoff) {
-        quadplane.set_climb_rate_cms(0);
+        quadplane.set_climb_rate_cms(0, false);
     } else {
         // update altitude target and call position controller
-        quadplane.set_climb_rate_cms(quadplane.get_pilot_desired_climb_rate_cms());
+        quadplane.set_climb_rate_cms(quadplane.get_pilot_desired_climb_rate_cms(), false);
     }
     quadplane.run_z_controller();
-
-    // Stabilize with fixed wing surfaces
-    plane.stabilize_roll();
-    plane.stabilize_pitch();
 }
 
 #endif

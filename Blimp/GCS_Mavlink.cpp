@@ -1,7 +1,6 @@
 #include "Blimp.h"
 
 #include "GCS_Mavlink.h"
-#include <AP_RPM/AP_RPM_config.h>
 
 MAV_TYPE GCS_Blimp::frame_type() const
 {
@@ -52,8 +51,8 @@ void GCS_MAVLINK_Blimp::send_position_target_global_int()
     }
     static constexpr uint16_t POSITION_TARGET_TYPEMASK_LAST_BYTE = 0xF000;
     static constexpr uint16_t TYPE_MASK = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
-                                          POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
-                                          POSITION_TARGET_TYPEMASK_YAW_IGNORE | POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE | POSITION_TARGET_TYPEMASK_LAST_BYTE;
+            POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+            POSITION_TARGET_TYPEMASK_YAW_IGNORE | POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE | POSITION_TARGET_TYPEMASK_LAST_BYTE;
 
     mavlink_msg_position_target_global_int_send(
         chan,
@@ -102,11 +101,11 @@ int16_t GCS_MAVLINK_Blimp::vfr_hud_throttle() const
  */
 void GCS_MAVLINK_Blimp::send_pid_tuning()
 {
-    if (blimp.control_mode == Mode::Number::MANUAL || blimp.control_mode == Mode::Number::LAND) {
+    if(blimp.control_mode == Mode::Number::MANUAL || blimp.control_mode == Mode::Number::LAND) {
         //No PIDs are used in Manual or Land mode.
         return;
     }
-
+    
     static const int8_t axes[] = {
         PID_SEND::VELX,
         PID_SEND::VELY,
@@ -284,7 +283,7 @@ const AP_Param::GroupInfo GCS_MAVLINK_Parameters::var_info[] = {
 
     // @Param: EXTRA3
     // @DisplayName: Extra data type 3 stream rate to ground station
-    // @Description: Stream rate of AHRS, SYSTEM_TIME, RANGEFINDER, DISTANCE_SENSOR, TERRAIN_REQUEST, GIMBAL_DEVICE_ATTITUDE_STATUS, OPTICAL_FLOW, MAG_CAL_REPORT, MAG_CAL_PROGRESS, EKF_STATUS_REPORT, VIBRATION and RPM to ground station
+    // @Description: Stream rate of AHRS, HWSTATUS, SYSTEM_TIME, RANGEFINDER, DISTANCE_SENSOR, TERRAIN_REQUEST, BATTERY2, MOUNT_STATUS, OPTICAL_FLOW, MAG_CAL_REPORT, MAG_CAL_PROGRESS, EKF_STATUS_REPORT, VIBRATION and RPM to ground station
     // @Units: Hz
     // @Range: 0 10
     // @Increment: 1
@@ -320,14 +319,10 @@ static const ap_message STREAM_EXTENDED_STATUS_msgs[] = {
     MSG_CURRENT_WAYPOINT, // MISSION_CURRENT
     MSG_GPS_RAW,
     MSG_GPS_RTK,
-#if GPS_MAX_RECEIVERS > 1
     MSG_GPS2_RAW,
     MSG_GPS2_RTK,
-#endif
     MSG_NAV_CONTROLLER_OUTPUT,
-#if AP_FENCE_ENABLED
     MSG_FENCE_STATUS,
-#endif
     MSG_POSITION_TARGET_GLOBAL_INT,
 };
 static const ap_message STREAM_POSITION_msgs[] = {
@@ -350,24 +345,20 @@ static const ap_message STREAM_EXTRA2_msgs[] = {
 };
 static const ap_message STREAM_EXTRA3_msgs[] = {
     MSG_AHRS,
+    MSG_HWSTATUS,
     MSG_SYSTEM_TIME,
     MSG_WIND,
     MSG_RANGEFINDER,
     MSG_DISTANCE_SENSOR,
-#if AP_BATTERY_ENABLED
+    MSG_BATTERY2,
     MSG_BATTERY_STATUS,
-#endif
-    MSG_GIMBAL_DEVICE_ATTITUDE_STATUS,
+    MSG_MOUNT_STATUS,
     MSG_OPTICAL_FLOW,
-#if COMPASS_CAL_ENABLED
     MSG_MAG_CAL_REPORT,
     MSG_MAG_CAL_PROGRESS,
-#endif
     MSG_EKF_STATUS_REPORT,
     MSG_VIBRATION,
-#if AP_RPM_ENABLED
     MSG_RPM,
-#endif
     MSG_ESC_TELEMETRY,
     MSG_GENERATOR_STATUS,
 };
@@ -376,9 +367,7 @@ static const ap_message STREAM_PARAMS_msgs[] = {
 };
 static const ap_message STREAM_ADSB_msgs[] = {
     MSG_ADSB_VEHICLE,
-#if AP_AIS_ENABLED
     MSG_AIS_VESSEL,
-#endif
 };
 
 const struct GCS_MAVLINK::stream_entries GCS_MAVLINK::all_stream_entries[] = {
@@ -427,9 +416,9 @@ void GCS_MAVLINK_Blimp::send_banner()
     send_text(MAV_SEVERITY_INFO, "Frame: %s", blimp.get_frame_string());
 }
 
-MAV_RESULT GCS_MAVLINK_Blimp::_handle_command_preflight_calibration(const mavlink_command_int_t &packet, const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Blimp::_handle_command_preflight_calibration(const mavlink_command_long_t &packet)
 {
-    return GCS_MAVLINK::_handle_command_preflight_calibration(packet, msg);
+    return GCS_MAVLINK::_handle_command_preflight_calibration(packet);
 }
 
 
@@ -440,6 +429,12 @@ MAV_RESULT GCS_MAVLINK_Blimp::handle_command_do_set_roi(const Location &roi_loc)
     }
     // blimp.flightmode->auto_yaw.set_roi(roi_loc);
     return MAV_RESULT_ACCEPTED;
+}
+
+MAV_RESULT GCS_MAVLINK_Blimp::handle_preflight_reboot(const mavlink_command_long_t &packet)
+{
+    // call parent
+    return GCS_MAVLINK::handle_preflight_reboot(packet);
 }
 
 bool GCS_MAVLINK_Blimp::set_home_to_current_location(bool _lock)
@@ -476,28 +471,58 @@ MAV_RESULT GCS_MAVLINK_Blimp::handle_command_int_do_reposition(const mavlink_com
     return MAV_RESULT_ACCEPTED;
 }
 
-MAV_RESULT GCS_MAVLINK_Blimp::handle_command_int_packet(const mavlink_command_int_t &packet, const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Blimp::handle_command_int_packet(const mavlink_command_int_t &packet)
 {
     switch (packet.command) {
+    case MAV_CMD_DO_FOLLOW:
+        return MAV_RESULT_UNSUPPORTED;
+
     case MAV_CMD_DO_REPOSITION:
         return handle_command_int_do_reposition(packet);
-    case MAV_CMD_NAV_TAKEOFF:
-        return MAV_RESULT_ACCEPTED;
     default:
-        return GCS_MAVLINK::handle_command_int_packet(packet, msg);
+        return GCS_MAVLINK::handle_command_int_packet(packet);
     }
 }
 
-#if AP_MAVLINK_COMMAND_LONG_ENABLED
-bool GCS_MAVLINK_Blimp::mav_frame_for_command_long(MAV_FRAME &frame, MAV_CMD packet_command) const
+MAV_RESULT GCS_MAVLINK_Blimp::handle_command_mount(const mavlink_command_long_t &packet)
 {
-    if (packet_command == MAV_CMD_NAV_TAKEOFF) {
-        frame = MAV_FRAME_GLOBAL_RELATIVE_ALT;
-        return true;
+    // if the mount doesn't do pan control then yaw the entire vehicle instead:
+    switch (packet.command) {
+    default:
+        break;
     }
-    return GCS_MAVLINK::mav_frame_for_command_long(frame, packet_command);
+    return GCS_MAVLINK::handle_command_mount(packet);
 }
-#endif
+
+MAV_RESULT GCS_MAVLINK_Blimp::handle_command_long_packet(const mavlink_command_long_t &packet)
+{
+    switch (packet.command) {
+
+    case MAV_CMD_NAV_TAKEOFF: {
+        return MAV_RESULT_ACCEPTED;
+    }
+
+    case MAV_CMD_CONDITION_YAW:
+        // param1 : target angle [0-360]
+        // param2 : speed during change [deg per second]
+        // param3 : direction (-1:ccw, +1:cw)
+        // param4 : relative offset (1) or absolute angle (0)
+        if ((packet.param1 >= 0.0f)   &&
+            (packet.param1 <= 360.0f) &&
+            (is_zero(packet.param4) || is_equal(packet.param4,1.0f))) {
+            // blimp.flightmode->auto_yaw.set_fixed_yaw(
+            // packet.param1,
+            // packet.param2,
+            // (int8_t)packet.param3,
+            // is_positive(packet.param4));
+            return MAV_RESULT_ACCEPTED;
+        }
+        return MAV_RESULT_FAILED;
+
+    default:
+        return GCS_MAVLINK::handle_command_long_packet(packet);
+    }
+}
 
 void GCS_MAVLINK_Blimp::handleMessage(const mavlink_message_t &msg)
 {
@@ -520,7 +545,7 @@ void GCS_MAVLINK_Blimp::handleMessage(const mavlink_message_t &msg)
 } // end handle mavlink
 
 
-MAV_RESULT GCS_MAVLINK_Blimp::handle_flight_termination(const mavlink_command_int_t &packet)
+MAV_RESULT GCS_MAVLINK_Blimp::handle_flight_termination(const mavlink_command_long_t &packet)
 {
     MAV_RESULT result = MAV_RESULT_FAILED;
     if (packet.param1 > 0.5f) {

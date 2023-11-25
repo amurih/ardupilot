@@ -19,14 +19,13 @@ void Sub::init_ardupilot()
     can_mgr.init();
 #endif
 
-#if STATS_ENABLED == ENABLED
-    // initialise stats module
-    g2.stats.init();
+    // init cargo gripper
+#if GRIPPER_ENABLED == ENABLED
+    g2.gripper.init();
 #endif
 
-    // init cargo gripper
-#if AP_GRIPPER_ENABLED
-    g2.gripper.init();
+#if AC_FENCE == ENABLED
+    fence.init();
 #endif
 
     // initialise notify system
@@ -53,11 +52,7 @@ void Sub::init_ardupilot()
 #elif CONFIG_HAL_BOARD != HAL_BOARD_LINUX
     AP_Param::set_default_by_name("BARO_EXT_BUS", 1);
 #endif
-
-#if AP_TEMPERATURE_SENSOR_ENABLED
-    // In order to preserve Sub's previous AP_TemperatureSensor Behavior we set the Default I2C Bus Here
-    AP_Param::set_default_by_name("TEMP1_BUS", barometer.external_bus());
-#endif
+    celsius.init(barometer.external_bus());
 
     // setup telem slots with serial ports
     gcs().setup_uarts();
@@ -75,9 +70,7 @@ void Sub::init_ardupilot()
     init_rc_out();              // sets up motors and output to escs
     init_joystick();            // joystick initialization
 
-#if AP_RELAY_ENABLED
     relay.init();
-#endif
 
     /*
      *  setup the 'main loop is dead' check. Note that this relies on
@@ -104,15 +97,10 @@ void Sub::init_ardupilot()
 #if HAL_MOUNT_ENABLED
     // initialise camera mount
     camera_mount.init();
-    // This step is necessary so that the servo is properly initialized
+    // This step ncessary so the servo is properly initialized
     camera_mount.set_angle_target(0, 0, 0, false);
     // for some reason the call to set_angle_targets changes the mode to mavlink targeting!
     camera_mount.set_mode(MAV_MOUNT_MODE_RC_TARGETING);
-#endif
-
-#if AP_CAMERA_ENABLED
-    // initialise camera
-    camera.init();
 #endif
 
 #ifdef USERHOOK_INIT
@@ -153,7 +141,7 @@ void Sub::init_ardupilot()
 #endif
 
     // initialise AP_RPM library
-#if AP_RPM_ENABLED
+#if RPM_ENABLED == ENABLED
     rpm_sensor.init();
 #endif
 
@@ -170,6 +158,11 @@ void Sub::init_ardupilot()
 #if AP_SCRIPTING_ENABLED
     g2.scripting.init();
 #endif // AP_SCRIPTING_ENABLED
+
+    // we don't want writes to the serial port to cause us to pause
+    // mid-flight, so set the serial ports non-blocking once we are
+    // ready to fly
+    serial_manager.set_blocking_writes_all(false);
 
     // enable CPU failsafe
     mainloop_failsafe_enable();
@@ -282,11 +275,8 @@ bool Sub::should_log(uint32_t mask)
 #include <AP_ADSB/AP_ADSB.h>
 
 // dummy method to avoid linking AFS
-#if AP_ADVANCEDFAILSAFE_ENABLED
 bool AP_AdvancedFailsafe::gcs_terminate(bool should_terminate, const char *reason) { return false; }
 AP_AdvancedFailsafe *AP::advancedfailsafe() { return nullptr; }
-#endif
-
 #if HAL_ADSB_ENABLED
 // dummy method to avoid linking AP_Avoidance
 AP_Avoidance *AP::ap_avoidance() { return nullptr; }

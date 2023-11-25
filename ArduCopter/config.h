@@ -27,7 +27,6 @@
 /// change in your local copy of APM_Config.h.
 ///
 #include "APM_Config.h"
-#include <AP_Follow/AP_Follow_config.h>
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -85,6 +84,10 @@
  # define RANGEFINDER_FILT_DEFAULT 0.5f     // filter for rangefinder distance
 #endif
 
+#ifndef SURFACE_TRACKING_VELZ_MAX
+ # define SURFACE_TRACKING_VELZ_MAX 150     // max vertical speed change while surface tracking with rangefinder
+#endif
+
 #ifndef SURFACE_TRACKING_TIMEOUT_MS
  # define SURFACE_TRACKING_TIMEOUT_MS  1000 // surface tracking target alt will reset to current rangefinder alt after this many milliseconds without a good rangefinder alt
 #endif
@@ -105,9 +108,36 @@
  # define MAV_SYSTEM_ID          1
 #endif
 
+
+//////////////////////////////////////////////////////////////////////////////
+// Battery monitoring
+//
+#ifndef BOARD_VOLTAGE_MIN
+ # define BOARD_VOLTAGE_MIN             4.3f        // min board voltage in volts for pre-arm checks
+#endif
+
+#ifndef BOARD_VOLTAGE_MAX
+ # define BOARD_VOLTAGE_MAX             5.8f        // max board voltage in volts for pre-arm checks
+#endif
+
 // prearm GPS hdop check
 #ifndef GPS_HDOP_GOOD_DEFAULT
  # define GPS_HDOP_GOOD_DEFAULT         140     // minimum hdop that represents a good position.  used during pre-arm checks if fence is enabled
+#endif
+
+// GCS failsafe
+#ifndef FS_GCS
+ # define FS_GCS                        DISABLED
+#endif
+
+// Radio failsafe while using RC_override
+#ifndef FS_RADIO_RC_OVERRIDE_TIMEOUT_MS
+ # define FS_RADIO_RC_OVERRIDE_TIMEOUT_MS  1000    // RC Radio failsafe triggers after 1 second while using RC_override from ground station
+#endif
+
+// Radio failsafe
+#ifndef FS_RADIO_TIMEOUT_MS
+ #define FS_RADIO_TIMEOUT_MS            500     // RC Radio Failsafe triggers after 500 milliseconds with No RC Input
 #endif
 
 // missing terrain data failsafe
@@ -140,6 +170,36 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+//  Crop Sprayer - enabled only on larger firmwares
+#ifndef SPRAYER_ENABLED
+ # define SPRAYER_ENABLED  HAL_SPRAYER_ENABLED
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// Precision Landing with companion computer or IRLock sensor
+#ifndef PRECISION_LANDING
+ # define PRECISION_LANDING ENABLED
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// gripper - enabled only on larger firmwares
+#ifndef GRIPPER_ENABLED
+ # define GRIPPER_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// winch support
+#ifndef WINCH_ENABLED
+# define WINCH_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// rotations per minute sensor support
+#ifndef RPM_ENABLED
+ # define RPM_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
 // Parachute release
 #ifndef PARACHUTE
  # define PARACHUTE HAL_PARACHUTE_ENABLED
@@ -147,8 +207,8 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // Nav-Guided - allows external nav computer to control vehicle
-#ifndef AC_NAV_GUIDED
- # define AC_NAV_GUIDED    ENABLED
+#ifndef NAV_GUIDED
+ # define NAV_GUIDED    !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -190,7 +250,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // Follow - follow another vehicle or GCS
 #ifndef MODE_FOLLOW_ENABLED
-# define MODE_FOLLOW_ENABLED AP_FOLLOW_ENABLED
+# define MODE_FOLLOW_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -202,7 +262,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // GuidedNoGPS mode - control vehicle's angles from GCS
 #ifndef MODE_GUIDED_NOGPS_ENABLED
-# define MODE_GUIDED_NOGPS_ENABLED ENABLED
+# define MODE_GUIDED_NOGPS_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -238,7 +298,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // System ID - conduct system identification tests on vehicle
 #ifndef MODE_SYSTEMID_ENABLED
-# define MODE_SYSTEMID_ENABLED ENABLED
+# define MODE_SYSTEMID_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -250,38 +310,23 @@
 //////////////////////////////////////////////////////////////////////////////
 // ZigZag - allow vehicle to fly in a zigzag manner with predefined point A B
 #ifndef MODE_ZIGZAG_ENABLED
-# define MODE_ZIGZAG_ENABLED ENABLED
+# define MODE_ZIGZAG_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Turtle - allow vehicle to be flipped over after a crash
 #ifndef MODE_TURTLE_ENABLED
-# define MODE_TURTLE_ENABLED HAL_DSHOT_ENABLED && FRAME_CONFIG != HELI_FRAME
-#endif
-
-//////////////////////////////////////////////////////////////////////////////
-// Flowhold - use optical flow to hover in place
-#ifndef MODE_FLOWHOLD_ENABLED
-# define MODE_FLOWHOLD_ENABLED AP_OPTICALFLOW_ENABLED
-#endif
-
-//////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////
-// Weathervane - allow vehicle to yaw into wind
-#ifndef WEATHERVANE_ENABLED
-# define WEATHERVANE_ENABLED ENABLED
+# define MODE_TURTLE_ENABLED !HAL_MINIMIZE_FEATURES && !defined(DISABLE_DSHOT) && FRAME_CONFIG != HELI_FRAME
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // Autorotate - autonomous auto-rotation - helicopters only
-#ifndef MODE_AUTOROTATE_ENABLED
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     #if FRAME_CONFIG == HELI_FRAME
         #ifndef MODE_AUTOROTATE_ENABLED
-        # define MODE_AUTOROTATE_ENABLED ENABLED
+        # define MODE_AUTOROTATE_ENABLED !HAL_MINIMIZE_FEATURES
         #endif
     #else
         # define MODE_AUTOROTATE_ENABLED DISABLED
@@ -289,6 +334,17 @@
 #else
     # define MODE_AUTOROTATE_ENABLED DISABLED
 #endif
+//////////////////////////////////////////////////////////////////////////////
+
+// Beacon support - support for local positioning systems
+#ifndef BEACON_ENABLED
+# define BEACON_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// Landing Gear support
+#ifndef LANDING_GEAR_ENABLED
+ #define LANDING_GEAR_ENABLED ENABLED
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -372,6 +428,13 @@
 #endif
 #ifndef LAND_DETECTOR_ACCEL_MAX
 # define LAND_DETECTOR_ACCEL_MAX            1.0f    // vehicle acceleration must be under 1m/s/s
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+// CAMERA TRIGGER AND CONTROL
+//
+#ifndef CAMERA
+ # define CAMERA        ENABLED
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -559,12 +622,29 @@
 // Fence, Rally and Terrain and AC_Avoidance defaults
 //
 
+// Enable/disable Fence
+#ifndef AC_FENCE
+ #define AC_FENCE ENABLED
+#endif
+
+#ifndef AC_RALLY
+ #define AC_RALLY   ENABLED
+#endif
+
+#if AP_TERRAIN_AVAILABLE && !AC_RALLY
+ #error Terrain relies on Rally which is disabled
+#endif
+
 #ifndef AC_AVOID_ENABLED
  #define AC_AVOID_ENABLED   ENABLED
 #endif
 
 #ifndef AC_OAPATHPLANNER_ENABLED
- #define AC_OAPATHPLANNER_ENABLED   ENABLED
+ #define AC_OAPATHPLANNER_ENABLED   !HAL_MINIMIZE_FEATURES
+#endif
+
+#if AC_AVOID_ENABLED && !AC_FENCE
+  #error AC_Avoidance relies on AC_FENCE which is disabled
 #endif
 
 #if MODE_FOLLOW_ENABLED && !AC_AVOID_ENABLED
@@ -637,8 +717,4 @@
 
 #ifndef AC_CUSTOMCONTROL_MULTI_ENABLED
 #define AC_CUSTOMCONTROL_MULTI_ENABLED FRAME_CONFIG == MULTICOPTER_FRAME && AP_CUSTOMCONTROL_ENABLED
-#endif
-
-#ifndef AC_PAYLOAD_PLACE_ENABLED
-#define AC_PAYLOAD_PLACE_ENABLED 1
 #endif

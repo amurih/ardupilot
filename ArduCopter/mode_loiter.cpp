@@ -34,14 +34,14 @@ bool ModeLoiter::init(bool ignore_checks)
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
     pos_control->set_correction_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     _precision_loiter_active = false;
 #endif
 
     return true;
 }
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
 bool ModeLoiter::do_precision_loiter()
 {
     if (!_precision_loiter_enabled) {
@@ -131,17 +131,6 @@ void ModeLoiter::run()
         attitude_control->input_thrust_vector_rate_heading(loiter_nav->get_thrust_vector(), target_yaw_rate, false);
         break;
 
-    case AltHold_Landed_Ground_Idle:
-        attitude_control->reset_yaw_target_and_rate();
-        FALLTHROUGH;
-
-    case AltHold_Landed_Pre_Takeoff:
-        attitude_control->reset_rate_controller_I_terms_smoothly();
-        loiter_nav->init_target();
-        attitude_control->input_thrust_vector_rate_heading(loiter_nav->get_thrust_vector(), target_yaw_rate, false);
-        pos_control->relax_z_controller(0.0f);   // forces throttle output to decay to zero
-        break;
-
     case AltHold_Takeoff:
         // initiate take-off
         if (!takeoff.running()) {
@@ -161,11 +150,22 @@ void ModeLoiter::run()
         attitude_control->input_thrust_vector_rate_heading(loiter_nav->get_thrust_vector(), target_yaw_rate, false);
         break;
 
+    case AltHold_Landed_Ground_Idle:
+        attitude_control->reset_yaw_target_and_rate();
+        FALLTHROUGH;
+
+    case AltHold_Landed_Pre_Takeoff:
+        attitude_control->reset_rate_controller_I_terms_smoothly();
+        loiter_nav->init_target();
+        attitude_control->input_thrust_vector_rate_heading(loiter_nav->get_thrust_vector(), target_yaw_rate, false);
+        pos_control->relax_z_controller(0.0f);   // forces throttle output to decay to zero
+        break;
+
     case AltHold_Flying:
         // set motors to full range
         motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
         bool precision_loiter_old_state = _precision_loiter_active;
         if (do_precision_loiter()) {
             precision_loiter_xy();

@@ -2,7 +2,7 @@
 
 // Code to integrate AC_Fence library with main ArduCopter code
 
-#if AP_FENCE_ENABLED
+#if AC_FENCE == ENABLED
 
 // fence_check - ask fence library to check for breaches and initiate the response
 // called at 1hz

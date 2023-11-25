@@ -6,8 +6,8 @@ import re
 
 
 class Emit:
-    def __init__(self):
-        pass
+    def __init__(self, sitl=False):
+        self.sitl = sitl
 
     prog_values_field = re.compile(r"-?\d*\.?\d+: ?[\w ]+,?")
 

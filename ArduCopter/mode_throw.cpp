@@ -52,7 +52,6 @@ void ModeThrow::run()
 
     } else if (stage == Throw_Detecting && throw_detected()){
         gcs().send_text(MAV_SEVERITY_INFO,"throw detected - spooling motors");
-        copter.set_land_complete(false);
         stage = Throw_Wait_Throttle_Unlimited;
 
         // Cancel the waiting for throw tone sequence

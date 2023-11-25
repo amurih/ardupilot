@@ -18,7 +18,8 @@ public:
     Mode() {}
 
     // do not allow copying
-    CLASS_NO_COPY(Mode);
+    Mode(const Mode &other) = delete;
+    Mode &operator=(const Mode&) = delete;
 
     // returns a unique number specific to this mode
     virtual Mode::Number number() const = 0;

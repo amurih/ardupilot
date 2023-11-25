@@ -279,10 +279,8 @@ static const ap_message STREAM_EXTENDED_STATUS_msgs[] = {
     MSG_NAV_CONTROLLER_OUTPUT,
     MSG_GPS_RAW,
     MSG_GPS_RTK,
-#if GPS_MAX_RECEIVERS > 1
     MSG_GPS2_RAW,
     MSG_GPS2_RTK,
-#endif
 };
 static const ap_message STREAM_POSITION_msgs[] = {
     MSG_LOCATION,
@@ -301,13 +299,12 @@ static const ap_message STREAM_EXTRA1_msgs[] = {
 };
 static const ap_message STREAM_EXTRA3_msgs[] = {
     MSG_AHRS,
+    MSG_HWSTATUS,
     MSG_SIMSTATE,
     MSG_SYSTEM_TIME,
     MSG_AHRS2,
-#if COMPASS_CAL_ENABLED
     MSG_MAG_CAL_REPORT,
     MSG_MAG_CAL_PROGRESS,
-#endif
     MSG_EKF_STATUS_REPORT,
 };
 static const ap_message STREAM_PARAMS_msgs[] = {
@@ -389,7 +386,7 @@ void GCS_MAVLINK_Tracker::mavlink_check_target(const mavlink_message_t &msg)
 
     // set our sysid to the target, this ensures we lock onto a single vehicle
     if (tracker.g.sysid_target == 0) {
-        tracker.g.sysid_target.set(msg.sysid);
+        tracker.g.sysid_target = msg.sysid;
     }
 
     // send data stream request to target on all channels
@@ -406,9 +403,9 @@ uint8_t GCS_MAVLINK_Tracker::sysid_my_gcs() const
     return tracker.g.sysid_my_gcs;
 }
 
-MAV_RESULT GCS_MAVLINK_Tracker::_handle_command_preflight_calibration_baro(const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Tracker::_handle_command_preflight_calibration_baro()
 {
-    MAV_RESULT ret = GCS_MAVLINK::_handle_command_preflight_calibration_baro(msg);
+    MAV_RESULT ret = GCS_MAVLINK::_handle_command_preflight_calibration_baro();
     if (ret == MAV_RESULT_ACCEPTED) {
         // zero the altitude difference on next baro update
         tracker.nav_status.need_altitude_calibration = true;
@@ -416,7 +413,7 @@ MAV_RESULT GCS_MAVLINK_Tracker::_handle_command_preflight_calibration_baro(const
     return ret;
 }
 
-MAV_RESULT GCS_MAVLINK_Tracker::handle_command_component_arm_disarm(const mavlink_command_int_t &packet)
+MAV_RESULT GCS_MAVLINK_Tracker::handle_command_component_arm_disarm(const mavlink_command_long_t &packet)
 {
     if (is_equal(packet.param1,1.0f)) {
         tracker.arm_servos();
@@ -429,8 +426,11 @@ MAV_RESULT GCS_MAVLINK_Tracker::handle_command_component_arm_disarm(const mavlin
     return MAV_RESULT_UNSUPPORTED;
 }
 
-MAV_RESULT GCS_MAVLINK_Tracker::handle_command_int_packet(const mavlink_command_int_t &packet, const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Tracker::handle_command_long_packet(const mavlink_command_long_t &packet)
 {
+    // do command
+    send_text(MAV_SEVERITY_INFO,"Command received: ");
+
     switch(packet.command) {
 
     case MAV_CMD_DO_SET_SERVO:
@@ -448,7 +448,7 @@ MAV_RESULT GCS_MAVLINK_Tracker::handle_command_int_packet(const mavlink_command_
         return MAV_RESULT_ACCEPTED;
 
     default:
-        return GCS_MAVLINK::handle_command_int_packet(packet, msg);
+        return GCS_MAVLINK::handle_command_long_packet(packet);
     }
 }
 
@@ -491,7 +491,7 @@ void GCS_MAVLINK_Tracker::handleMessage(const mavlink_message_t &msg)
 
         mavlink_msg_mission_item_decode(&msg, &packet);
 
-        Location tell_command;
+        struct Location tell_command;
 
         switch (packet.frame)
         {
