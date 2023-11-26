@@ -85,14 +85,10 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     //attitude_target.from_euler(_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z);
     //printf("attitude_target:(%f, %f, %f, %f)\n", attitude_target[0],attitude_target[1],attitude_target[2],attitude_target[3]);
     // This vector represents the angular error to rotate the thrust vector using x and y and heading using z
-    Vector3f attiude_error;
+    Vector3f attitude_error;
     float _thrust_angle, _thrust_error_angle;
-    _att_control->thrust_heading_rotation_angles(attitude_target, attitude_body, attiude_error, _thrust_angle, _thrust_error_angle);
-
-    //attiude_error[0] = attitude_target[0] - attitude_body[0];
-    //attiude_error[1] = attitude_target[1] - attitude_body[1];
-    //attiude_error[2] = attitude_target[2] - attitude_body[2];
-    //attiude_error[3] = attitude_target[3] - attitude_body[3];
+    _att_control->thrust_heading_rotation_angles(attitude_target, attitude_body, attitude_error, _thrust_angle, _thrust_error_angle);
+    
     // recalculate ang vel feedforward from attitude target model
     // rotation from the target frame to the body frame
     Quaternion rotation_target_to_body = attitude_body.inverse() * attitude_target;
@@ -102,13 +98,13 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     gcs().send_text(MAV_SEVERITY_INFO, "ALPHA custom controller working");
 
     // '<Root>/attitude_body'
-    float arg_attiude_body[3]{_euler_angle_body.x, _euler_angle_body.y, _euler_angle_body.z};
+    float arg_attitude_body[3]{_euler_angle_body.x, _euler_angle_body.y, _euler_angle_body.z};
 
     // '<Root>/attitude_target'
-    float arg_attiude_target[3]{_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z};
+    float arg_attitude_target[3]{_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z};
 
-    // '<Root>/attiude_error'
-    float arg_attiude_error[3]{attiude_error.x, attiude_error.y, attiude_error.z };
+    // '<Root>/attitude_error'
+    float arg_attitude_error[3]{attitude_error.x, attitude_error.y, attitude_error.z };
 
     // '<Root>/rate_ff'
     float arg_rate_ff[3]{ang_vel_body_feedforward.x, ang_vel_body_feedforward.y, ang_vel_body_feedforward.z};
@@ -123,10 +119,10 @@ Vector3f AC_CustomControl_ALPHA::update(void)
 
 
     printf("ALPHA.cpp_simulink_controller.step\n");
-    printf("attiude_error: %f,%f,%f\n",arg_attiude_error[0],arg_attiude_error[1],arg_attiude_error[2]);
+    printf("attitude_error: %f,%f,%f\n",arg_attitude_error[0],arg_attitude_error[1],arg_attitude_error[2]);
     printf("rate_ff: %f,%f,%f \n", arg_rate_ff[0],arg_rate_ff[1],arg_rate_ff[2]);
     printf("rate_meas: %f,%f,%f \n", arg_rate_meas[0],arg_rate_meas[1],arg_rate_meas[2]);
-    simulink_controller.step(arg_attiude_body, arg_attiude_target, arg_attiude_error, arg_rate_ff, arg_rate_meas, arg_Out1, output_tester_body, output_tester_target);
+    simulink_controller.step(arg_attitude_body, arg_attitude_target, arg_attitude_error, arg_rate_ff, arg_rate_meas, arg_Out1, output_tester_body, output_tester_target);
     printf("Out: %f,%f,%f \n",arg_Out1[0],arg_Out1[1],arg_Out1[2]);
 
     AP::logger().Write("CCI", "TimeUS,argR,argP,argY,argTR,argTP,argTY","Qffffff",
@@ -147,9 +143,9 @@ Vector3f AC_CustomControl_ALPHA::update(void)
                             (double)output_tester_target[2]);    
     AP::logger().Write("CC1", "TimeUS,atEX,atEY,atEZ,angVX,angVY,angVZ, measX,measY,measZ","Qfffffffff",
                             AP_HAL::micros64(),
-                            (double)attiude_error.x,
-                            (double)attiude_error.y,
-                            (double)attiude_error.z,
+                            (double)attitude_error.x,
+                            (double)attitude_error.y,
+                            (double)attitude_error.z,
                             (double)ang_vel_body_feedforward.x,
                             (double)ang_vel_body_feedforward.y,
                             (double)ang_vel_body_feedforward.z,

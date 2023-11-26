@@ -19,7 +19,7 @@
  */
 
 #include "arduAttCont.h"
-//#include "rtwtypes.h"
+#include "rtwtypes.h"
 #include "arduAttCont_private.h"
 
 /*extern "C" {
@@ -29,7 +29,7 @@
 }
 */
 /* Model step function */
-  void arduAttCont::step(real32_T arg_attiude_body[3], real32_T arg_attiude_target[3], real32_T arg_attiude_error[3], real32_T
+  void arduAttCont::step(real32_T arg_attitude_body[3], real32_T arg_attitude_target[3], real32_T arg_attitude_error[3], real32_T
   arg_rate_ff[3], real32_T arg_rate_meas[3], real32_T (&arg_Out1)[3], real32_T (&output_tester_body)[3], real32_T (&output_tester_target)[3])
 {
   real32_T rtb_FilterCoefficient;
@@ -41,12 +41,12 @@
 
   /* Sum: '<Root>/Sum2' incorporates:
    *  Gain: '<Root>/Gain'
-   *  Inport: '<Root>/attiude_error'
+   *  Inport: '<Root>/attitude_error'
    *  Inport: '<Root>/rate_ff'
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum1'
    */
-  rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arg_attiude_error[0] +
+  rtb_Sum2 = (arduAttCont_P.ANG_RLL_P * arg_attitude_error[0] +
               arg_rate_ff[0]) - arg_rate_meas[0];
 
   /* Gain: '<S86>/Filter Coefficient' incorporates:
@@ -59,12 +59,12 @@
 
   /* Sum: '<Root>/Sum4' incorporates:
    *  Gain: '<Root>/Gain1'
-   *  Inport: '<Root>/attiude_error'
+   *  Inport: '<Root>/attitude_error'
    *  Inport: '<Root>/rate_ff'
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum3'
    */
-  rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arg_attiude_error[1] +
+  rtb_Sum4 = (arduAttCont_P.ANG_PIT_P * arg_attitude_error[1] +
               arg_rate_ff[1]) - arg_rate_meas[1];
 
   /* Gain: '<S38>/Filter Coefficient' incorporates:
@@ -80,12 +80,12 @@
    *  Gain: '<Root>/Gain3'
    *  Gain: '<Root>/Gain4'
    *  Gain: '<Root>/Gain5'
-   *  Inport: '<Root>/attiude_error'
+   *  Inport: '<Root>/attitude_error'
    *  Inport: '<Root>/rate_ff'
    *  Inport: '<Root>/rate_meas'
    *  Sum: '<Root>/Sum5'
    */
-  rtb_Sum6 = (arduAttCont_P.Gain3_Gain * arg_attiude_error[2] *
+  rtb_Sum6 = (arduAttCont_P.Gain3_Gain * arg_attitude_error[2] *
               arduAttCont_P.ANG_YAW_P + arduAttCont_P.Gain4_Gain *
               arg_rate_ff[2]) - arduAttCont_P.Gain5_Gain * arg_rate_meas[2];
 
@@ -111,41 +111,43 @@
    *  Sum: '<S92>/Sum'
    */
   arg_Out1[0] = ((arduAttCont_P.RAT_RLL_P * rtb_Sum2 +
-    arduAttCont_DW.Integrator_DSTATE) + rtb_FilterCoefficient) * arduAttCont_P.Gain7_Gain;
+    arduAttCont_DW.Integrator_DSTATE) + rtb_FilterCoefficient) *
+    arduAttCont_P.Gain7_Gain;
   arg_Out1[1] = ((arduAttCont_P.RAT_PIT_P * rtb_Sum4 +
-    arduAttCont_DW.Integrator_DSTATE_k) + rtb_FilterCoefficient_g) * arduAttCont_P.Gain8_Gain;
+    arduAttCont_DW.Integrator_DSTATE_k) + rtb_FilterCoefficient_g) *
+    arduAttCont_P.Gain8_Gain;
   arg_Out1[2] = (arduAttCont_P.RAT_YAW_P * rtb_Sum6 +
     arduAttCont_DW.Integrator_DSTATE_a) + rtb_FilterCoefficient_p;
 
   /* Outport: '<Root>/output_tester_body' incorporates:
-   *  Inport: '<Root>/arg_attiude_body'
+   *  Inport: '<Root>/arg_attitude_body'
    */
-  output_tester_body[0] = arg_attiude_body[0];
+  output_tester_body[0] = arg_attitude_body[0];
 
   /* Outport: '<Root>/output_tester_target' incorporates:
-   *  Inport: '<Root>/arg_attiude_target'
+   *  Inport: '<Root>/arg_attitude_target'
    */
-  output_tester_target[0] = arg_attiude_target[0];
+  output_tester_target[0] = arg_attitude_target[0];
 
   /* Outport: '<Root>/output_tester_body' incorporates:
-   *  Inport: '<Root>/arg_attiude_body'
+   *  Inport: '<Root>/arg_attitude_body'
    */
-  output_tester_body[1] = arg_attiude_body[1];
+  output_tester_body[1] = arg_attitude_body[1];
 
   /* Outport: '<Root>/output_tester_target' incorporates:
-   *  Inport: '<Root>/arg_attiude_target'
+   *  Inport: '<Root>/arg_attitude_target'
    */
-  output_tester_target[1] = arg_attiude_target[1];
+  output_tester_target[1] = arg_attitude_target[1];
 
   /* Outport: '<Root>/output_tester_body' incorporates:
-   *  Inport: '<Root>/arg_attiude_body'
+   *  Inport: '<Root>/arg_attitude_body'
    */
-  output_tester_body[2] = arg_attiude_body[2];
+  output_tester_body[2] = arg_attitude_body[2];
 
   /* Outport: '<Root>/output_tester_target' incorporates:
-   *  Inport: '<Root>/arg_attiude_target'
+   *  Inport: '<Root>/arg_attitude_target'
    */
-  output_tester_target[2] = arg_attiude_target[2];
+  output_tester_target[2] = arg_attitude_target[2];
 
   /* Update for DiscreteIntegrator: '<S83>/Integrator' incorporates:
    *  Gain: '<S80>/Integral Gain'
@@ -200,14 +202,14 @@
    * The two integers represent the low bits Timing.clockTick0 and the high bits
    * Timing.clockTickH0. When the low bit overflows to 0, the high bits increment.
    */
-  /*if (!(++(&arduAttCont_M)->Timing.clockTick0)) {
+   /*if (!(++(&arduAttCont_M)->Timing.clockTick0)) {
     ++(&arduAttCont_M)->Timing.clockTickH0;
   }
 
   (&arduAttCont_M)->Timing.taskTime0 = (&arduAttCont_M)->Timing.clockTick0 *
     (&arduAttCont_M)->Timing.stepSize0 + (&arduAttCont_M)->Timing.clockTickH0 *
     (&arduAttCont_M)->Timing.stepSize0 * 4294967296.0;
-}*/
+  }*/
 
 /* Model initialize function */
 void arduAttCont::initialize()
@@ -219,6 +221,7 @@ void arduAttCont::initialize()
   rtmSetTFinal((&arduAttCont_M), 10.0);
   (&arduAttCont_M)->Timing.stepSize0 = 0.01;
   */
+
   /* Setup for data logging */
   /*{
     static RTWLogInfo rt_DataLoggingInfo;
@@ -226,6 +229,7 @@ void arduAttCont::initialize()
     (&arduAttCont_M)->rtwLogInfo = &rt_DataLoggingInfo;
   }
   */
+
   /* Setup for data logging */
   /*{
     rtliSetLogXSignalInfo((&arduAttCont_M)->rtwLogInfo, (nullptr));
@@ -242,11 +246,13 @@ void arduAttCont::initialize()
     rtliSetLogYSignalPtrs((&arduAttCont_M)->rtwLogInfo, (nullptr));
   }
   */
+
   /* Matfile logging */
   /*rt_StartDataLoggingWithStartTime((&arduAttCont_M)->rtwLogInfo, 0.0,
     rtmGetTFinal((&arduAttCont_M)), (&arduAttCont_M)->Timing.stepSize0,
     (&rtmGetErrorStatus((&arduAttCont_M))));
   */
+
   /* InitializeConditions for DiscreteIntegrator: '<S83>/Integrator' */
   arduAttCont_DW.Integrator_DSTATE =
     arduAttCont_P.rollratePIDController_Initial_o;

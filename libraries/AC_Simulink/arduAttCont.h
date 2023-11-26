@@ -86,11 +86,11 @@ struct DW_arduAttCont_T {
 
 /* External inputs (root inport signals with default storage) */
 struct ExtU_arduAttCont_T {
-  real32_T attiude_error[3];          /* '<Root>/attiude_error' */
+  real32_T attitude_error[3];          /* '<Root>/attitude_error' */
   real32_T rate_ff[3];                 /* '<Root>/rate_ff' */
   real32_T rate_meas[3];               /* '<Root>/rate_meas' */
-  real32_T arg_attiude_body[3];       /* '<Root>/arg_attiude_body' */
-  real32_T arg_attiude_target[3];     /* '<Root>/arg_attiude_target' */
+  real32_T arg_attitude_body[3];       /* '<Root>/arg_attitude_body' */
+  real32_T arg_attitude_target[3];     /* '<Root>/arg_attitude_target' */
 };
 
 /* External outputs (root outports fed by signals with default storage) */
@@ -262,7 +262,7 @@ class arduAttCont final
   void initialize();
 
   /* model step function */
-  void step(real32_T arg_attiude_body[3], real32_T arg_attiude_target[3], real32_T arg_attiude_error[3], real32_T
+  void step(real32_T arg_attitude_body[3], real32_T arg_attitude_target[3], real32_T arg_attitude_error[3], real32_T
   arg_rate_ff[3], real32_T arg_rate_meas[3], real32_T (&arg_Out1)[3], real32_T (&output_tester_body)[3], real32_T (&output_tester_target)[3]);
 
   /* model terminate function */
