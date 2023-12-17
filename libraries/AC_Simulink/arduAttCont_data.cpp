@@ -161,12 +161,12 @@ P_arduAttCont_T arduAttCont::arduAttCont_P{
   /* Computed Parameter: Gain4_Gain
    * Referenced by: '<Root>/Gain4'
    */
-  -1.0F,
+  1.0F,
 
   /* Computed Parameter: Gain3_Gain
    * Referenced by: '<Root>/Gain3'
    */
-  0.0F,
+  1.0F,
 
   /* Computed Parameter: Gain5_Gain
    * Referenced by: '<Root>/Gain5'

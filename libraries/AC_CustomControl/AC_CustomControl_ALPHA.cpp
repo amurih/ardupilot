@@ -71,12 +71,12 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     // reversed yaw
     //attitude_target = attitude_target * Quaternion(0.0f, 0.0f, 0.0f, -1.0f);
     attitude_target.to_euler(_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z);
-    printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
-    printf("euler_angle_target.y:%f\n", _euler_angle_target.y);
-    printf("euler_angle_target.z:%f\n", _euler_angle_target.z);
-    printf("euler_angle_body.x:%f\n", _euler_angle_body.x);
-    printf("euler_angle_body.y:%f\n", _euler_angle_body.y);
-    printf("euler_angle_body.z:%f\n", _euler_angle_body.z);
+    //printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
+    //printf("euler_angle_target.y:%f\n", _euler_angle_target.y);
+    //printf("euler_angle_target.z:%f\n", _euler_angle_target.z);
+    //printf("euler_angle_body.x:%f\n", _euler_angle_body.x);
+    //printf("euler_angle_body.y:%f\n", _euler_angle_body.y);
+    //printf("euler_angle_body.z:%f\n", _euler_angle_body.z);
     //printf("reversed attitude target\n");
     //_euler_angle_target.z = - _euler_angle_target.z;
     //printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
