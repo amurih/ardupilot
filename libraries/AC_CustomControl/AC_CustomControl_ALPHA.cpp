@@ -67,10 +67,16 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     attitude_body.to_euler(_euler_angle_body.x, _euler_angle_body.y, _euler_angle_body.z);
 
     attitude_target = _att_control->get_attitude_target_quat();
+    
     //printf("attitude_target:(%f, %f, %f, %f)\n", attitude_target[0],attitude_target[1],attitude_target[2],attitude_target[3]);
     // reversed yaw
     //attitude_target = attitude_target * Quaternion(0.0f, 0.0f, 0.0f, -1.0f);
     attitude_target.to_euler(_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z);
+    gcs().send_text(MAV_SEVERITY_INFO, "attitude_target");
+    gcs().send_text(MAV_SEVERITY_INFO, "targetX=%f", (double)(_euler_angle_target.x));
+    gcs().send_text(MAV_SEVERITY_INFO, "targetY=%f", (double)(_euler_angle_target.y));
+    gcs().send_text(MAV_SEVERITY_INFO, "targetZ=%f", (double)(_euler_angle_target.z));
+    gcs().send_text(MAV_SEVERITY_INFO, "---");
     //printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
     //printf("euler_angle_target.y:%f\n", _euler_angle_target.y);
     //printf("euler_angle_target.z:%f\n", _euler_angle_target.z);
