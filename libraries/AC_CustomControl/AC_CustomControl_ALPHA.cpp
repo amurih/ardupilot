@@ -95,7 +95,7 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     // target angle velocity vector in the body frame
     Vector3f ang_vel_body_feedforward = rotation_target_to_body * _att_control->get_attitude_target_ang_vel();
     Vector3f gyro_latest = _ahrs->get_gyro_latest();
-    gcs().send_text(MAV_SEVERITY_INFO, "ALPHA custom controller working");
+    //gcs().send_text(MAV_SEVERITY_INFO, "ALPHA custom controller working");
 
     // '<Root>/attitude_body'
     float arg_attitude_body[3]{_euler_angle_body.x, _euler_angle_body.y, _euler_angle_body.z};
@@ -118,45 +118,45 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     float output_tester_target[3];
 
 
-    printf("ALPHA.cpp_simulink_controller.step\n");
-    printf("attitude_error: %f,%f,%f\n",arg_attitude_error[0],arg_attitude_error[1],arg_attitude_error[2]);
-    printf("rate_ff: %f,%f,%f \n", arg_rate_ff[0],arg_rate_ff[1],arg_rate_ff[2]);
-    printf("rate_meas: %f,%f,%f \n", arg_rate_meas[0],arg_rate_meas[1],arg_rate_meas[2]);
+    //printf("ALPHA.cpp_simulink_controller.step\n");
+    //printf("attitude_error: %f,%f,%f\n",arg_attitude_error[0],arg_attitude_error[1],arg_attitude_error[2]);
+    //printf("rate_ff: %f,%f,%f \n", arg_rate_ff[0],arg_rate_ff[1],arg_rate_ff[2]);
+    //printf("rate_meas: %f,%f,%f \n", arg_rate_meas[0],arg_rate_meas[1],arg_rate_meas[2]);
     simulink_controller.step(arg_attitude_body, arg_attitude_target, arg_attitude_error, arg_rate_ff, arg_rate_meas, arg_Out1, output_tester_body, output_tester_target);
-    printf("Out: %f,%f,%f \n",arg_Out1[0],arg_Out1[1],arg_Out1[2]);
+    //printf("Out: %f,%f,%f \n",arg_Out1[0],arg_Out1[1],arg_Out1[2]);
 
-    AP::logger().Write("CCI", "TimeUS,argR,argP,argY,argTR,argTP,argTY","Qffffff",
-                            AP_HAL::micros64(),
-                            (double)_euler_angle_body.x,
-                            (double)_euler_angle_body.y,
-                            (double)_euler_angle_body.z,
-                            (double)_euler_angle_target.x,
-                            (double)_euler_angle_target.y,
-                            (double)_euler_angle_target.z);
-    AP::logger().Write("CCO", "TimeUS,otbX,otbY,otbZ,ottX,ottY,ottZ","Qffffff",
-                            AP_HAL::micros64(),
-                            (double)output_tester_body[0],
-                            (double)output_tester_body[1],
-                            (double)output_tester_body[2],
-                            (double)output_tester_target[0],
-                            (double)output_tester_target[1],
-                            (double)output_tester_target[2]);    
-    AP::logger().Write("CC1", "TimeUS,atEX,atEY,atEZ,angVX,angVY,angVZ, measX,measY,measZ","Qfffffffff",
-                            AP_HAL::micros64(),
-                            (double)attitude_error.x,
-                            (double)attitude_error.y,
-                            (double)attitude_error.z,
-                            (double)ang_vel_body_feedforward.x,
-                            (double)ang_vel_body_feedforward.y,
-                            (double)ang_vel_body_feedforward.z,
-                            (double)gyro_latest.x,
-                            (double)gyro_latest.y,
-                            (double)gyro_latest.z);
-    AP::logger().Write("CC2", "TimeUS,outX,outY,outZ","Qfff",
-                            AP_HAL::micros64(),
-                            (double)arg_Out1[0],
-                            (double)arg_Out1[1],
-                            (double)arg_Out1[2]);                             
+    //AP::logger().Write("CCI", "TimeUS,argR,argP,argY,argTR,argTP,argTY","Qffffff",
+    //                        AP_HAL::micros64(),
+    //                        (double)_euler_angle_body.x,
+    //                        (double)_euler_angle_body.y,
+    //                        (double)_euler_angle_body.z,
+    //                        (double)_euler_angle_target.x,
+    //                       (double)_euler_angle_target.y,
+    //                        (double)_euler_angle_target.z);
+    //AP::logger().Write("CCO", "TimeUS,otbX,otbY,otbZ,ottX,ottY,ottZ","Qffffff",
+    //                        AP_HAL::micros64(),
+    //                        (double)output_tester_body[0],
+    //                        (double)output_tester_body[1],
+    //                        (double)output_tester_body[2],
+    //                        (double)output_tester_target[0],
+    //                       (double)output_tester_target[1],
+    //                        (double)output_tester_target[2]);    
+    //AP::logger().Write("CC1", "TimeUS,atEX,atEY,atEZ,angVX,angVY,angVZ, measX,measY,measZ","Qfffffffff",
+    //                        AP_HAL::micros64(),
+    //                        (double)attitude_error.x,
+    //                        (double)attitude_error.y,
+    //                        (double)attitude_error.z,
+    //                        (double)ang_vel_body_feedforward.x,
+    //                        (double)ang_vel_body_feedforward.y,
+    //                       (double)ang_vel_body_feedforward.z,
+    //                        (double)gyro_latest.x,
+    //                        (double)gyro_latest.y,
+    //                        (double)gyro_latest.z);
+    //AP::logger().Write("CC2", "TimeUS,outX,outY,outZ","Qfff",
+    //                        AP_HAL::micros64(),
+    //                        (double)arg_Out1[0],
+    //                        (double)arg_Out1[1],
+    //                        (double)arg_Out1[2]);                             
     // return what arducopter main controller outputted
     return Vector3f(arg_Out1[0], arg_Out1[1], arg_Out1[2]);
 }
