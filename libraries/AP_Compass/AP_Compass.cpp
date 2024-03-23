@@ -666,6 +666,28 @@ const AP_Param::GroupInfo Compass::var_info[] = {
 
     // index 51
 
+    // @Param: TAR_ROLL
+    // @DisplayName: Target Roll
+    // @Description: Convert pilot input into roll angle. unit is centi-degrees
+    // @Range: -18000 18000
+    // @User: Advanced
+    AP_GROUPINFO("TAR_ROLL", 52, Compass, _g_target_roll,0),
+
+    // @Param: TAR_PIT
+    // @DisplayName: Target PITCH
+    // @Description: Convert pilot input into pitch angle. unit is centi-degrees
+    // @Range: -18000 18000
+    // @User: Advanced
+    AP_GROUPINFO("TAR_PIT", 53, Compass, _g_target_pitch,0),
+
+    // @Param: TAR_Y_R
+    // @DisplayName: Target YAW RATE
+    // @Description: Convert pilot input into yaw rate. unit is centi-degrees per second
+    // @Range: -360000 360000
+    // @User: Advanced
+    AP_GROUPINFO("TAR_Y_R", 54, Compass, _g_target_yaw_rate,0),
+
+
     AP_GROUPEND
 };
 

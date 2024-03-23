@@ -82,6 +82,9 @@ class Compass
 {
 friend class AP_Compass_Backend;
 public:
+    AP_Float    _g_target_roll;     // pilot input to roll angle
+    AP_Float    _g_target_pitch;    // pilot input to pitch angle
+    AP_Float    _g_target_yaw_rate; // pilot input to yaw angle
     Compass();
 
     /* Do not allow copies */

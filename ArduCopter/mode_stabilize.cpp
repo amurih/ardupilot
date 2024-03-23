@@ -1,4 +1,5 @@
 #include "Copter.h"
+#include <AP_Compass/AP_Compass.h>
 
 /*
  * Init and run calls for stabilize flight mode
@@ -17,6 +18,17 @@ void ModeStabilize::run()
 
     // get pilot's desired yaw rate
     float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->norm_input_dz());
+
+    Compass &compass = AP::compass();
+    compass._g_target_roll = target_roll;
+    compass._g_target_pitch = target_pitch;
+    compass._g_target_yaw_rate = target_yaw_rate;
+    printf("target_roll1:%f\n", target_roll);
+    printf("target_roll2:%f\n", (float)compass._g_target_roll);
+    printf("target_pitch1:%f\n", target_pitch);
+    printf("target_pitch2:%f\n", (float)compass._g_target_pitch);
+    printf("target_yaw_rate1:%f\n", target_yaw_rate);
+    printf("target_yaw_rate2:%f\n", (float)compass._g_target_yaw_rate);
 
     if (!motors->armed()) {
         // Motors should be Stopped

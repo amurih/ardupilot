@@ -1,6 +1,7 @@
 #include "AC_CustomControl_ALPHA.h"
 #include <stdio.h>
 #include <AP_HAL/AP_HAL.h>
+#include <AP_Compass/AP_Compass.h>
 
 #if CUSTOMCONTROL_ALPHA_ENABLED
 
@@ -59,6 +60,19 @@ Vector3f AC_CustomControl_ALPHA::update(void)
             break;
     }
     
+    Compass &compass = AP::compass();
+    float target_r, target_p, target_y;
+    //compass._g_target_roll = target_roll;
+    printf("target_roll3:%f\n", (float)compass._g_target_roll);
+    printf("target_pitch3:%f\n", (float)compass._g_target_pitch);
+    printf("target_yaw_rate3:%f\n", (float)compass._g_target_yaw_rate);
+    target_r = compass._g_target_roll;
+    target_p = compass._g_target_pitch;
+    target_y = compass._g_target_yaw_rate;
+    printf("target_roll4:%f\n", target_r);
+    printf("target_pitch4:%f\n", target_p);
+    printf("target_yaw_rate4:%f\n", target_y);
+
     // run custom controller after here
     Quaternion attitude_body, attitude_target;
     _ahrs->get_quat_body_to_ned(attitude_body);
@@ -72,11 +86,11 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     // reversed yaw
     //attitude_target = attitude_target * Quaternion(0.0f, 0.0f, 0.0f, -1.0f);
     attitude_target.to_euler(_euler_angle_target.x, _euler_angle_target.y, _euler_angle_target.z);
-    gcs().send_text(MAV_SEVERITY_INFO, "attitude_target");
-    gcs().send_text(MAV_SEVERITY_INFO, "targetX=%f", (double)(_euler_angle_target.x));
-    gcs().send_text(MAV_SEVERITY_INFO, "targetY=%f", (double)(_euler_angle_target.y));
-    gcs().send_text(MAV_SEVERITY_INFO, "targetZ=%f", (double)(_euler_angle_target.z));
-    gcs().send_text(MAV_SEVERITY_INFO, "---");
+    //gcs().send_text(MAV_SEVERITY_INFO, "attitude_target");
+    //gcs().send_text(MAV_SEVERITY_INFO, "targetX=%f", (double)(_euler_angle_target.x));
+    //gcs().send_text(MAV_SEVERITY_INFO, "targetY=%f", (double)(_euler_angle_target.y));
+    //gcs().send_text(MAV_SEVERITY_INFO, "targetZ=%f", (double)(_euler_angle_target.z));
+    //gcs().send_text(MAV_SEVERITY_INFO, "---");
     //printf("euler_angle_target.x:%f\n", _euler_angle_target.x);
     //printf("euler_angle_target.y:%f\n", _euler_angle_target.y);
     //printf("euler_angle_target.z:%f\n", _euler_angle_target.z);
@@ -129,7 +143,11 @@ Vector3f AC_CustomControl_ALPHA::update(void)
     //printf("rate_ff: %f,%f,%f \n", arg_rate_ff[0],arg_rate_ff[1],arg_rate_ff[2]);
     //printf("rate_meas: %f,%f,%f \n", arg_rate_meas[0],arg_rate_meas[1],arg_rate_meas[2]);
     simulink_controller.step(arg_attitude_body, arg_attitude_target, arg_attitude_error, arg_rate_ff, arg_rate_meas, arg_Out1, output_tester_body, output_tester_target);
-    //printf("Out: %f,%f,%f \n",arg_Out1[0],arg_Out1[1],arg_Out1[2]);
+    gcs().send_text(MAV_SEVERITY_INFO, "CC_Output");
+    gcs().send_text(MAV_SEVERITY_INFO, "Out1=%f", (double)(arg_Out1[0]));
+    gcs().send_text(MAV_SEVERITY_INFO, "Out2=%f", (double)(arg_Out1[1]));
+    gcs().send_text(MAV_SEVERITY_INFO, "Out3=%f", (double)(arg_Out1[2]));
+    printf("Out: %f,%f,%f \n",arg_Out1[0],arg_Out1[1],arg_Out1[2]);
 
     //AP::logger().Write("CCI", "TimeUS,argR,argP,argY,argTR,argTP,argTY","Qffffff",
     //                        AP_HAL::micros64(),
