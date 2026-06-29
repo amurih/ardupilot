@@ -179,7 +179,7 @@ float Plane::stabilize_roll_get_roll_out()
 #endif
 
     bool disable_integrator = false;
-    if (control_mode == &mode_stabilize && channel_roll->get_control_in() != 0) {
+    if ((control_mode == &mode_stabilize || control_mode == &mode_custom) && channel_roll->get_control_in() != 0) {
         disable_integrator = true;
     }
     return rollController.get_servo_out(nav_roll_cd - ahrs.roll_sensor, speed_scaler, disable_integrator,
@@ -249,7 +249,7 @@ float Plane::stabilize_pitch_get_pitch_out()
 
     int32_t demanded_pitch = nav_pitch_cd + int32_t(g.pitch_trim * 100.0) + SRV_Channels::get_output_scaled(SRV_Channel::k_throttle) * g.kff_throttle_to_pitch;
     bool disable_integrator = false;
-    if (control_mode == &mode_stabilize && channel_pitch->get_control_in() != 0) {
+    if ((control_mode == &mode_stabilize || control_mode == &mode_custom) && channel_pitch->get_control_in() != 0) {
         disable_integrator = true;
     }
     /* force landing pitch if:
@@ -547,7 +547,7 @@ int16_t Plane::calc_nav_yaw_coordinated()
         commanded_rudder = yawController.get_rate_out(yaw_rate+coordination_yaw_rate,  speed_scaler, false);
         using_rate_controller = true;
     } else {
-        if (control_mode == &mode_stabilize && rudder_in != 0) {
+        if ((control_mode == &mode_stabilize || control_mode == &mode_custom) && rudder_in != 0) {
             disable_integrator = true;
         }
 

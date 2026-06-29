@@ -297,6 +297,7 @@ private:
 
     ModeCircle mode_circle;
     ModeStabilize mode_stabilize;
+    ModeCustom mode_custom;
     ModeTraining mode_training;
     ModeAcro mode_acro;
     ModeFBWA mode_fbwa;

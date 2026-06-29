@@ -1306,6 +1306,7 @@ bool Plane::nav_scripting_enable(uint8_t mode)
        switch (current_control_mode) {
        case Mode::Number::CIRCLE:
        case Mode::Number::STABILIZE:
+       case Mode::Number::CUSTOM:
        case Mode::Number::ACRO:
        case Mode::Number::FLY_BY_WIRE_A:
        case Mode::Number::FLY_BY_WIRE_B:

@@ -328,6 +328,7 @@ bool Mode::use_throttle_limits() const
 #endif
 
     if (this == &plane.mode_stabilize ||
+        this == &plane.mode_custom ||
         this == &plane.mode_training ||
         this == &plane.mode_acro ||
         this == &plane.mode_fbwa ||
@@ -360,6 +361,7 @@ bool Mode::use_battery_compensation() const
 #endif
 
     if (this == &plane.mode_stabilize ||
+        this == &plane.mode_custom ||
         this == &plane.mode_training ||
         this == &plane.mode_acro ||
         this == &plane.mode_fbwa ||

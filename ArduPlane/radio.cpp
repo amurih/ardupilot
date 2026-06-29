@@ -172,7 +172,7 @@ int16_t Plane::rudder_input(void)
     }
 
     if ((flight_option_enabled(FlightOptions::DIRECT_RUDDER_ONLY)) &&
-        !(control_mode == &mode_manual || control_mode == &mode_stabilize || control_mode == &mode_acro)) {
+        !(control_mode == &mode_manual || control_mode == &mode_stabilize || control_mode == &mode_custom || control_mode == &mode_acro)) {
         // the user does not want any input except in these modes
         return 0;
     }

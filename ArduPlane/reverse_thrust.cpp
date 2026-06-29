@@ -104,6 +104,7 @@ bool Plane::allow_reverse_thrust(void) const
         allow |= reverse_thrust_enabled(UseReverseThrust::ACRO);
         break;
     case Mode::Number::STABILIZE:
+    case Mode::Number::CUSTOM:
         allow |= reverse_thrust_enabled(UseReverseThrust::STABILIZE);
         break;
     case Mode::Number::THERMAL:

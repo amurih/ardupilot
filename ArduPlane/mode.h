@@ -70,6 +70,7 @@ public:
 #if MODE_AUTOLAND_ENABLED
         AUTOLAND      = 26,
 #endif
+        CUSTOM        = 27,
 
     // Mode number 30 reserved for "offboard" for external/lua control.
     };
@@ -565,7 +566,33 @@ public:
 
 private:
     void stabilize_stick_mixing_direct();
+};
 
+/*
+  CUSTOM flight mode — user-extensible control law.
+
+  Default behavior matches STABILIZE (attitude assist + pilot throttle).
+  Replace ModeCustom::update() / ModeCustom::run() in mode_custom.cpp with your controller.
+*/
+class ModeCustom : public Mode
+{
+public:
+
+    Number mode_number() const override { return Number::CUSTOM; }
+    const char *name() const override { return "Custom"; }
+    const char *name4() const override { return "CUST"; }
+
+    void update() override;
+    void run() override;
+
+#if MODE_AUTOLAND_ENABLED
+    bool allows_autoland_direction_capture() const override { return true; }
+#endif
+
+protected:
+    bool _enter() override;
+
+private:
 };
 
 class ModeTraining : public Mode
